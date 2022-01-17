@@ -107,6 +107,7 @@ class ContactService {
   /// List of all contacts added by atsign
   List<String> allContactsList = [];
 
+  /// Function to initialize the contacts services
   Future<void> initContactsService(
       String rootDomainFromApp, int rootPortFromApp) async {
     loggedInUserDetails = null;
@@ -120,11 +121,13 @@ class ContactService {
     await fetchBlockContactList();
   }
 
+  /// Function to reset atSign error and checkAtSign values.
   void resetData() {
     getAtSignError = '';
     checkAtSign = false;
   }
 
+  /// Function to fetch the atsign's contacts
   Future<List<AtContact>?> fetchContacts() async {
     try {
       selectedContacts = [];
@@ -158,12 +161,12 @@ class ContactService {
   }
 
   void compareContactListForUpdatedState() {
-    for (var c in contactList) {
-      var index =
-          baseContactList.indexWhere((e) => e.contact!.atSign == c.atSign);
+    for (var contact in contactList) {
+      var index = baseContactList
+          .indexWhere((e) => e.contact!.atSign == contact.atSign);
       if (index > -1) {
         baseContactList[index] = BaseContact(
-          c,
+          contact,
           isBlocking: baseContactList[index].isBlocking,
           isMarkingFav: baseContactList[index].isMarkingFav,
           isDeleting: baseContactList[index].isDeleting,
@@ -171,7 +174,7 @@ class ContactService {
       } else {
         baseContactList.add(
           BaseContact(
-            c,
+            contact,
             isBlocking: false,
             isMarkingFav: false,
             isDeleting: false,
@@ -195,6 +198,7 @@ class ContactService {
     }
   }
 
+  @Deprecated('Use `blockOrUnblockContact` instead')
   Future<bool> blockUnblockContact(
       {required AtContact contact, required bool blockAction}) async {
     try {
@@ -213,6 +217,26 @@ class ContactService {
     }
   }
 
+  /// Function to block or unblock a contact
+  Future<bool> blockOrUnblockContact(
+      {required AtContact contact, required bool blockAction}) async {
+    try {
+      contact.blocked = blockAction;
+      var _isUpdated = await atContactImpl.update(contact);
+      if (_isUpdated) {
+        await fetchBlockContactList();
+        await fetchContacts();
+        return _isUpdated;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      print('error in unblock: $error');
+      return false;
+    }
+  }
+
+  @Deprecated('Use `markAsFavouriteContact` instead')
   Future<bool> markFavContact(AtContact contact) async {
     try {
       contact.favourite = !contact.favourite!;
@@ -230,6 +254,25 @@ class ContactService {
     }
   }
 
+  /// Function to mark a contact as favourite
+  Future<bool> markAsFavouriteContact(AtContact contact) async {
+    try {
+      contact.favourite = !contact.favourite!;
+      var res = await atContactImpl.update(contact);
+      if (res) {
+        await fetchBlockContactList();
+        await fetchContacts();
+        return res;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      print('error in marking fav: $error');
+      return false;
+    }
+  }
+
+  /// Function to fetch blocked contacts. Returns null if error occurs.
   Future<List<AtContact>?> fetchBlockContactList() async {
     try {
       blockContactList = [];
@@ -281,6 +324,7 @@ class ContactService {
     }
   }
 
+  @Deprecated('Use `deleteContact` instead')
   Future<bool> deleteAtSign({required String atSign}) async {
     try {
       var result = await atContactImpl.delete(atSign);
@@ -293,7 +337,21 @@ class ContactService {
     }
   }
 
+  /// Function to delete a contact.
+  Future<bool> deleteContact({required String atSign}) async {
+    try {
+      var result = await atContactImpl.delete(atSign);
+      print('delete result => $result');
+      fetchContacts();
+      return result;
+    } catch (error) {
+      print('error in delete atsign:$error');
+      return false;
+    }
+  }
+
   /// Function to validate, fetch details and save to current atsign's contact list
+  @Deprecated('Use `addContact` instead')
   Future<bool> addAtSign({
     String? atSign,
     String? nickName,
@@ -353,7 +411,90 @@ class ContactService {
     }
   }
 
+  /// Function to validate, fetch details and save to current atsign's contact list
+  Future<bool> addContact({
+    String? atSign,
+    String? nickName,
+  }) async {
+    if (atSign == null || atSign == '') {
+      getAtSignError = TextStrings().emptyAtsign;
+
+      return false;
+    } else if (atSign[0] != '@') {
+      atSign = '@' + atSign;
+    }
+    atSign = atSign.toLowerCase().trim();
+
+    if (atSign == atClientManager.atClient.getCurrentAtSign()) {
+      getAtSignError = TextStrings().addingLoggedInUser;
+
+      return false;
+    }
+    try {
+      isContactPresent = false;
+
+      getAtSignError = '';
+      var contact = AtContact();
+
+      checkAtSign = await checkAtsign(atSign);
+
+      if (!checkAtSign!) {
+        getAtSignError = TextStrings().unknownAtsign(atSign);
+      } else {
+        for (var element in contactList) {
+          if (element.atSign == atSign) {
+            getAtSignError = TextStrings().atsignExists(atSign);
+            isContactPresent = true;
+            break;
+          }
+        }
+      }
+      if (!isContactPresent && checkAtSign!) {
+        var details = await getContactDetails(atSign, nickName);
+        contact = AtContact(
+          atSign: atSign,
+          tags: details,
+        );
+        print('details==>${contact.atSign}');
+        var result = await atContactImpl.add(contact).catchError((e) {
+          print('error to add contact => $e');
+        });
+        print(result);
+        fetchContacts();
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      print(e);
+      return false;
+    }
+  }
+
+  @Deprecated('Use `removeContact` instead')
   void removeSelectedAtSign(AtContact? contact) {
+    try {
+      for (AtContact? atContact in selectedContacts) {
+        if (contact == atContact || atContact!.atSign == contact!.atSign) {
+          var index = selectedContacts.indexOf(contact!);
+          print('index is $index');
+          selectedContacts.removeAt(index);
+          break;
+        }
+      }
+      if (selectedContacts.length <= 25) {
+        limitReached = false;
+      } else {
+        limitReached = true;
+      }
+      selectedContactSink.add(selectedContacts);
+    } catch (error) {
+      print(error);
+    }
+  }
+
+  /// Function to remove a contact.
+  void removeContact(AtContact? contact) {
     try {
       for (AtContact? atContact in selectedContacts) {
         if (contact == atContact || atContact!.atSign == contact!.atSign) {
