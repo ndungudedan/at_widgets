@@ -73,7 +73,7 @@ class AtOnboardingConfig {
   /// **Note:**
   /// API Key is required when you set [rootEnvironment] to production.
   final RootEnvironment rootEnvironment;
-  final AtSignLogger _logger = AtSignLogger('At Onboarding Flutter');
+  final AtSignLogger logger = AtSignLogger('At Onboarding Flutter');
 
   AtOnboardingConfig({
     required this.context,

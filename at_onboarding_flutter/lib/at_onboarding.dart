@@ -1,3 +1,4 @@
+import 'package:at_backupkey_flutter/utils/size_config.dart';
 import 'package:at_onboarding_flutter/at_onboarding_screen.dart';
 import 'package:at_onboarding_flutter/utils/color_constants.dart';
 import 'package:flutter/cupertino.dart';
@@ -13,6 +14,7 @@ class AtOnboarding {
     required AtOnboardingConfig config,
   }) async {
     ColorConstants.darkTheme = Theme.of(context).brightness == Brightness.dark;
+    SizeConfig().init(context);
     await showDialog(
       context: context,
       barrierDismissible: false,
