@@ -3,12 +3,13 @@ import 'package:at_onboarding_flutter_example/switch_atsign.dart';
 import 'package:flutter/material.dart';
 import 'package:at_client_mobile/at_client_mobile.dart';
 import 'package:at_onboarding_flutter/at_onboarding_flutter.dart'
-    show Onboarding;
+    show AtOnboardingConfig, Onboarding;
 import 'package:at_utils/at_logger.dart' show AtSignLogger;
 import 'package:path_provider/path_provider.dart'
     show getApplicationSupportDirectory;
 import 'package:at_app_flutter/at_app_flutter.dart' show AtEnv;
 import 'package:at_onboarding_flutter/widgets/custom_reset_button.dart';
+import 'package:at_onboarding_flutter/at_onboarding.dart';
 
 Future<void> main() async {
   await AtEnv.load();
@@ -32,6 +33,7 @@ final StreamController<ThemeMode> updateThemeMode =
 
 class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
+
   @override
   _MyAppState createState() => _MyAppState();
 }
@@ -101,21 +103,39 @@ class _MyAppState extends State<MyApp> {
                         setState(() {
                           atClientPreference = preference;
                         });
-                        Onboarding(
+                        AtOnboarding.start(
                           context: context,
-                          atClientPreference: atClientPreference!,
-                          domain: AtEnv.rootDomain,
-                          rootEnvironment: AtEnv.rootEnvironment,
-                          appAPIKey: AtEnv.appApiKey,
-                          appColor: Theme.of(context).primaryColor,
-                          onboard: (value, atsign) {
-                            _logger.finer('Successfully onboarded $atsign');
-                          },
-                          onError: (error) {
-                            _logger.severe('Onboarding throws $error error');
-                          },
-                          nextScreen: const HomeScreen(),
+                          config: AtOnboardingConfig(
+                            context: context,
+                            atClientPreference: atClientPreference!,
+                            domain: AtEnv.rootDomain,
+                            rootEnvironment: AtEnv.rootEnvironment,
+                            appAPIKey: AtEnv.appApiKey,
+                            appColor: Theme.of(context).primaryColor,
+                            onboard: (value, atsign) {
+                              _logger.finer('Successfully onboarded $atsign');
+                            },
+                            onError: (error) {
+                              _logger.severe('Onboarding throws $error error');
+                            },
+                            nextScreen: const HomeScreen(),
+                          ),
                         );
+                        // Onboarding(
+                        //   context: context,
+                        //   atClientPreference: atClientPreference!,
+                        //   domain: AtEnv.rootDomain,
+                        //   rootEnvironment: AtEnv.rootEnvironment,
+                        //   appAPIKey: AtEnv.appApiKey,
+                        //   appColor: Theme.of(context).primaryColor,
+                        //   onboard: (value, atsign) {
+                        //     _logger.finer('Successfully onboarded $atsign');
+                        //   },
+                        //   onError: (error) {
+                        //     _logger.severe('Onboarding throws $error error');
+                        //   },
+                        //   nextScreen: const HomeScreen(),
+                        // );
                       },
                       child: const Text('Onboard an @sign'),
                     ),

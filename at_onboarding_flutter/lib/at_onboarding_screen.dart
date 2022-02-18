@@ -16,6 +16,9 @@ class AtOnboardingScreen extends StatefulWidget {
 class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 100,),
+      color: Colors.red,
+    );
   }
 }

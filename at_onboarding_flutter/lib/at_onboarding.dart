@@ -7,7 +7,7 @@ import 'at_onboarding_config.dart';
 import 'screens/onboarding_widget.dart';
 import 'utils/app_constants.dart';
 
-class _AtOnboarding {
+class AtOnboarding {
   static start({
     required BuildContext context,
     required AtOnboardingConfig config,
