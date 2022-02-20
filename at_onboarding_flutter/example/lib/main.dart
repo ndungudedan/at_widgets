@@ -61,8 +61,6 @@ class _MyAppState extends State<MyApp> {
                 ThemeData().colorScheme.copyWith(secondary: Colors.black),
             backgroundColor: Colors.white,
             scaffoldBackgroundColor: Colors.white,
-            textTheme:
-                const TextTheme(bodyText1: TextStyle(color: Colors.black)),
           ),
           darkTheme: ThemeData().copyWith(
             brightness: Brightness.dark,
@@ -71,8 +69,6 @@ class _MyAppState extends State<MyApp> {
                 ThemeData().colorScheme.copyWith(secondary: Colors.white),
             backgroundColor: Colors.grey[850],
             scaffoldBackgroundColor: Colors.grey[850],
-            textTheme:
-                const TextTheme(bodyText1: TextStyle(color: Colors.white)),
           ),
           themeMode: themeMode,
           home: Scaffold(
@@ -96,7 +92,38 @@ class _MyAppState extends State<MyApp> {
             body: Builder(
               builder: (context) => Center(
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    ElevatedButton(
+                      onPressed: () async {
+                        var preference = await futurePreference;
+                        setState(() {
+                          atClientPreference = preference;
+                        });
+                        Onboarding(
+                          context: context,
+                          atClientPreference: atClientPreference!,
+                          domain: AtEnv.rootDomain,
+                          rootEnvironment: AtEnv.rootEnvironment,
+                          appAPIKey: AtEnv.appApiKey,
+                          appColor: Theme.of(context).primaryColor,
+                          onboard: (value, atsign) {
+                            _logger.finer('Successfully onboarded $atsign');
+                          },
+                          onError: (error) {
+                            _logger.severe('Onboarding throws $error error');
+                          },
+                          nextScreen: const HomeScreen(),
+                        );
+                      },
+                      child: const Text('Onboard an @sign'),
+                    ),
+                    const CustomResetButton(
+                      buttonText: 'Reset',
+                      width: 90,
+                      height: 40,
+                    ),
+                    const SizedBox(height: 100),
                     ElevatedButton(
                       onPressed: () async {
                         var preference = await futurePreference;
@@ -121,28 +148,33 @@ class _MyAppState extends State<MyApp> {
                             nextScreen: const HomeScreen(),
                           ),
                         );
-                        // Onboarding(
-                        //   context: context,
-                        //   atClientPreference: atClientPreference!,
-                        //   domain: AtEnv.rootDomain,
-                        //   rootEnvironment: AtEnv.rootEnvironment,
-                        //   appAPIKey: AtEnv.appApiKey,
-                        //   appColor: Theme.of(context).primaryColor,
-                        //   onboard: (value, atsign) {
-                        //     _logger.finer('Successfully onboarded $atsign');
-                        //   },
-                        //   onError: (error) {
-                        //     _logger.severe('Onboarding throws $error error');
-                        //   },
-                        //   nextScreen: const HomeScreen(),
-                        // );
                       },
-                      child: const Text('Onboard an @sign'),
+                      child: const Text('Onboard an @sign - 2'),
                     ),
-                    const CustomResetButton(
-                      buttonText: 'Reset',
-                      width: 90,
-                      height: 40,
+                    ElevatedButton(
+                      onPressed: () async {
+                        var preference = await futurePreference;
+                        atClientPreference = preference;
+                        AtOnboarding.reset(
+                          context: context,
+                          config: AtOnboardingConfig(
+                            context: context,
+                            atClientPreference: atClientPreference!,
+                            domain: AtEnv.rootDomain,
+                            rootEnvironment: AtEnv.rootEnvironment,
+                            appAPIKey: AtEnv.appApiKey,
+                            appColor: Theme.of(context).primaryColor,
+                            onboard: (value, atsign) {
+                              _logger.finer('Successfully onboarded $atsign');
+                            },
+                            onError: (error) {
+                              _logger.severe('Onboarding throws $error error');
+                            },
+                            nextScreen: const HomeScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text('Reset'),
                     ),
                   ],
                 ),
