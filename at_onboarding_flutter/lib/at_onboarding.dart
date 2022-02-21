@@ -22,20 +22,6 @@ class AtOnboarding {
     await showDialog(
       context: context,
       barrierDismissible: false,
-      // builder: (_) => OnboardingWidget(
-      //   atsign: config.atsign,
-      //   onboard: config.onboard,
-      //   onError: config.onError,
-      //   hideReferences: config.hideReferences,
-      //   hideQrScan: config.hideQrScan,
-      //   nextScreen: config.nextScreen,
-      //   fistTimeAuthNextScreen: config.fistTimeAuthNextScreen,
-      //   atClientPreference: config.atClientPreference,
-      //   appColor: config.appColor,
-      //   logo: config.logo,
-      //   domain: config.domain ?? AppConstants.rootEnvironment.domain,
-      //   appAPIKey: config.appAPIKey ?? AppConstants.rootEnvironment.apikey!,
-      // ),
       builder: (_) => AtOnboardingScreen(config: config),
     );
   }

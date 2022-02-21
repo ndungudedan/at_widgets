@@ -335,6 +335,7 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
                   builder: (BuildContext context) =>
                   _onboardingService.nextScreen!));
         }
+        Navigator.of(context).pop();
       }
     } catch (e) {
       setState(() {
