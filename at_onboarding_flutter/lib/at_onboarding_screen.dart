@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:at_backupkey_flutter/utils/color_constants.dart';
 import 'package:at_onboarding_flutter/at_onboarding_config.dart';
+import 'package:at_onboarding_flutter/at_onboarding_generate_screen.dart';
 import 'package:at_onboarding_flutter/screens/atsign_list_screen.dart';
 import 'package:at_onboarding_flutter/services/free_atsign_service.dart';
 import 'package:at_onboarding_flutter/services/size_config.dart';
@@ -204,7 +205,7 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
                                         MaterialStateProperty.all(
                                             Colors.white)),
                                     onPressed: () async {
-                                      /// TODO
+                                      _showGenerateScreen(context: context);
                                     },
                                     child: Text(
                                       'Generate Free @sign',
@@ -549,5 +550,15 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
                 ))),
       ]);
     });
+  }
+
+  static _showGenerateScreen({
+    required BuildContext context,
+  }) async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AtOnboardingGenerateScreen(),
+    );
   }
 }

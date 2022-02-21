@@ -14,6 +14,10 @@ class AtOnboarding {
     required AtOnboardingConfig config,
   }) async {
     ColorConstants.darkTheme = Theme.of(context).brightness == Brightness.dark;
+    AppConstants.setApiKey(
+        config.appAPIKey ?? (AppConstants.rootEnvironment.apikey ?? ''));
+    AppConstants.rootDomain =
+        config.domain ?? AppConstants.rootEnvironment.domain;
     SizeConfig().init(context);
     await showDialog(
       context: context,
@@ -41,9 +45,9 @@ class AtOnboarding {
     required AtOnboardingConfig config,
   }) async {
     await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => AtOnboardingResetScreen(config: config),
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AtOnboardingResetScreen(config: config),
     );
   }
 }
