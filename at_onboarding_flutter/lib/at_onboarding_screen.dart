@@ -2,13 +2,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
-import 'package:at_backupkey_flutter/utils/color_constants.dart';
 import 'package:at_client_mobile/at_client_mobile.dart';
 import 'package:at_onboarding_flutter/at_onboarding_config.dart';
 import 'package:at_onboarding_flutter/at_onboarding_generate_screen.dart';
-import 'package:at_onboarding_flutter/services/free_atsign_service.dart';
 import 'package:at_onboarding_flutter/services/onboarding_service.dart';
 import 'package:at_onboarding_flutter/services/size_config.dart';
+import 'package:at_onboarding_flutter/utils/at_onboarding_dimens.dart';
 import 'package:at_onboarding_flutter/utils/custom_textstyles.dart';
 import 'package:at_onboarding_flutter/utils/response_status.dart';
 import 'package:at_onboarding_flutter/utils/strings.dart';
@@ -20,6 +19,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_qr_reader/flutter_qr_reader.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
+
+import 'widgets/at_onboarding_button.dart';
 
 class AtOnboardingScreen extends StatefulWidget {
   final AtOnboardingConfig config;
@@ -46,11 +47,6 @@ class AtOnboardingScreen extends StatefulWidget {
 class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
   final AtSignLogger _logger = AtSignLogger('QR Scan');
   final OnboardingService _onboardingService = OnboardingService.getInstance();
-  final TextEditingController _atsignController = TextEditingController();
-
-  final TextEditingController _emailController = TextEditingController();
-
-  final FreeAtsignService _freeAtsignService = FreeAtsignService();
 
   final bool scanQR = false;
   final bool showClose = false;
@@ -367,7 +363,7 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
           barrierDismissible: false,
           context: context,
           builder: (BuildContext context) {
-            return Text("Error");
+            return const Text("Error");
           });
 
   bool _validatePickedFileContents(String fileContents) {
@@ -400,438 +396,186 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
         (BuildContext context, void Function(void Function()) stateSet) {
       return Stack(children: <Widget>[
         Opacity(
-            opacity: loading ? 0.3 : 1,
-            child: AbsorbPointer(
-                absorbing: loading,
-                child: AlertDialog(
-                  title: Text(
-                    'Setting up your account',
-                    style: TextStyle(
-                        color: ColorConstants.appColor, fontSize: 16.toFont),
-                  ),
-                  content: isAtsignForm && !isQrScanner
-                      ? Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.0.toFont),
-                          child: SizedBox(
-                            width: _dialogWidth,
-                            child: ListView(
-                              shrinkWrap: true,
-                              children: <Widget>[
-                                if (!isfreeAtsign &&
-                                    !widget.isQR &&
-                                    !isQrScanner) ...<Widget>[
-                                  SizedBox(height: 15.toHeight),
-                                  Text(
-                                    'Upload your backup key file?',
-                                    style: Theme.of(context).brightness !=
-                                            Brightness.dark
-                                        ? CustomTextStyles.fontR12primary
-                                        : CustomTextStyles.fontR12secondary,
-                                  ),
-                                  SizedBox(height: 5.toHeight),
-                                  SizedBox(
-                                      width: MediaQuery.of(context)
-                                          .size
-                                          .width
-                                          .toWidth,
-                                      height: SizeConfig().isTablet(context)
-                                          ? 50.toHeight
-                                          : null,
-                                      child: ElevatedButton(
-                                        style: Theme.of(context).brightness ==
-                                                Brightness.light
-                                            ? ButtonStyle(
-                                                backgroundColor:
-                                                    MaterialStateProperty.all(
-                                                        Colors.grey[800]))
-                                            : ButtonStyle(
-                                                backgroundColor:
-                                                    MaterialStateProperty.all(
-                                                        Colors.white)),
-                                        onPressed: (Platform.isMacOS ||
-                                                Platform.isLinux ||
-                                                Platform.isWindows)
-                                            ? _uploadKeyFileForDesktop
-                                            : _uploadKeyFile,
-                                        child: Text(
-                                          'Upload Backup Key File',
-                                          style: TextStyle(
-                                              color: Theme.of(context)
-                                                          .brightness ==
-                                                      Brightness.light
-                                                  ? Colors.white
-                                                  : Colors.black,
-                                              fontSize: 15.toFont),
-                                        ),
-                                      )),
-                                  SizedBox(height: 20.toHeight),
-                                  Text(
-                                    'Need an @sign?',
-                                    style: Theme.of(context).brightness !=
-                                            Brightness.dark
-                                        ? CustomTextStyles.fontR12primary
-                                        : CustomTextStyles.fontR12secondary,
-                                  ),
-                                  SizedBox(height: 5.toHeight),
-                                  SizedBox(
-                                      width: MediaQuery.of(context)
-                                          .size
-                                          .width
-                                          .toWidth,
-                                      height: SizeConfig().isTablet(context)
-                                          ? 50.toHeight
-                                          : null,
-                                      child: ElevatedButton(
-                                        style: Theme.of(context).brightness ==
-                                                Brightness.light
-                                            ? ButtonStyle(
-                                                backgroundColor:
-                                                    MaterialStateProperty.all(
-                                                        Colors.grey[800]))
-                                            : ButtonStyle(
-                                                backgroundColor:
-                                                    MaterialStateProperty.all(
-                                                        Colors.white)),
-                                        onPressed: () async {
-                                          _showGenerateScreen(context: context);
-                                        },
-                                        child: Text(
-                                          'Generate Free @sign',
-                                          style: TextStyle(
-                                              color: Theme.of(context)
-                                                          .brightness ==
-                                                      Brightness.light
-                                                  ? Colors.white
-                                                  : Colors.black,
-                                              fontSize: 15.toFont),
-                                        ),
-                                      )),
-                                  SizedBox(height: 20.toHeight),
-                                  widget.hideQrScan
-                                      ? const SizedBox()
-                                      : Text('Have a QR Code?',
-                                          style: Theme.of(context).brightness !=
-                                                  Brightness.dark
-                                              ? CustomTextStyles.fontR12primary
-                                              : CustomTextStyles
-                                                  .fontR12secondary),
-                                  widget.hideQrScan
-                                      ? const SizedBox()
-                                      : SizedBox(height: 5.toHeight),
-                                  widget.hideQrScan
-                                      ? const SizedBox()
-                                      : (Platform.isAndroid || Platform.isIOS)
-                                          ? SizedBox(
-                                              width: MediaQuery.of(context)
-                                                  .size
-                                                  .width
-                                                  .toWidth,
-                                              height:
-                                                  SizeConfig().isTablet(context)
-                                                      ? 50.toHeight
-                                                      : null,
-                                              child: ElevatedButton(
-                                                style: Theme.of(context)
-                                                            .brightness ==
-                                                        Brightness.light
-                                                    ? ButtonStyle(
-                                                        backgroundColor:
-                                                            MaterialStateProperty
-                                                                .all(Colors
-                                                                    .grey[800]))
-                                                    : ButtonStyle(
-                                                        backgroundColor:
-                                                            MaterialStateProperty
-                                                                .all(Colors
-                                                                    .white)),
-                                                onPressed: () async {
-                                                  ///TODO
-                                                },
-                                                child: Text(
-                                                  'Scan QR code',
-                                                  style: TextStyle(
-                                                      color: Theme.of(context)
-                                                                  .brightness ==
-                                                              Brightness.light
-                                                          ? Colors.white
-                                                          : Colors.black,
-                                                      fontSize: 15.toFont),
-                                                ),
-                                              ))
-                                          : SizedBox(
-                                              width: MediaQuery.of(context)
-                                                  .size
-                                                  .width,
-                                              height:
-                                                  SizeConfig().isTablet(context)
-                                                      ? 50.toHeight
-                                                      : null,
-                                              child: ElevatedButton(
-                                                style: ButtonStyle(
-                                                    backgroundColor:
-                                                        MaterialStateProperty
-                                                            .all(Colors
-                                                                .grey[800])),
-                                                onPressed: () async {},
-                                                child: Text(
-                                                  'Upload QR code',
-                                                  style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 15.toFont),
-                                                ),
-                                              )),
-                                ],
-                                if (isfreeAtsign) ...<Widget>[
-                                  SizedBox(height: 15.toHeight),
-                                  !otp
-                                      ? !pair
-                                          ? SizedBox(
-                                              width: MediaQuery.of(context)
-                                                  .size
-                                                  .width,
-                                              height:
-                                                  SizeConfig().isTablet(context)
-                                                      ? 50.toHeight
-                                                      : null,
-                                              child: ElevatedButton(
-                                                style: ButtonStyle(
-                                                    backgroundColor:
-                                                        MaterialStateProperty
-                                                            .all(Colors
-                                                                .grey[800])),
-                                                onPressed: () async {
-                                                  ///TODO
-                                                },
-                                                child: Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    children: <Widget>[
-                                                      Center(
-                                                          child: Text(
-                                                        'Refresh',
-                                                        style: TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize:
-                                                                15.toFont),
-                                                      )),
-                                                      const Icon(
-                                                        Icons.refresh,
-                                                        color: Colors.white,
-                                                        size: 30,
-                                                      )
-                                                    ]),
-                                              ))
-                                          : Column(children: <Widget>[
-                                              SizedBox(
-                                                  width: MediaQuery.of(context)
-                                                      .size
-                                                      .width,
-                                                  child: ElevatedButton(
-                                                    style: ButtonStyle(
-                                                        backgroundColor:
-                                                            MaterialStateProperty.all(
-                                                                (_emailController
-                                                                            .text !=
-                                                                        '')
-                                                                    ? Colors.grey[
-                                                                        800]
-                                                                    : Colors.grey[
-                                                                        400])),
-                                                    onPressed: () async {
-                                                      if (_emailController
-                                                              .text !=
-                                                          '') {
-                                                        loading = true;
-                                                        stateSet(() {});
-                                                        bool status = false;
-
-                                                        loading = false;
-                                                        stateSet(() {});
-                                                      }
-                                                    },
-                                                    child: Center(
-                                                        child: Text(
-                                                      'Send Code',
-                                                      style: TextStyle(
-                                                          color: Colors.white,
-                                                          fontSize: 15.toFont),
-                                                    )),
-                                                  )),
-                                              SizedBox(
-                                                height: 10.toHeight,
-                                              ),
-                                              Text(
-                                                Strings.emailNote,
-                                                style: TextStyle(
-                                                    fontSize: 13.toFont,
-                                                    fontWeight:
-                                                        FontWeight.w600),
-                                              ),
-                                              Center(
-                                                  child: TextButton(
-                                                      onPressed: () {
-                                                        pair = false;
-                                                        stateSet(() {});
-                                                      },
-                                                      child: Text(
-                                                        'Back',
-                                                        style: TextStyle(
-                                                            color: Colors
-                                                                .grey[700]),
-                                                      )))
-                                            ])
-                                      : Column(children: <Widget>[
-                                          SizedBox(
-                                              width: MediaQuery.of(context)
-                                                  .size
-                                                  .width,
-                                              height:
-                                                  SizeConfig().isTablet(context)
-                                                      ? 50.toHeight
-                                                      : null,
-                                              child: ElevatedButton(
-                                                style: ButtonStyle(
-                                                    backgroundColor:
-                                                        MaterialStateProperty.all(
-                                                            (_emailController
-                                                                            .text !=
-                                                                        '' ||
-                                                                    widget.isQR)
-                                                                ? Colors
-                                                                    .grey[800]
-                                                                : Colors.grey[
-                                                                    400])),
-                                                onPressed: () async {
-                                                  if ((_emailController.text !=
-                                                          '') ||
-                                                      widget.isQR) {
-                                                    loading = true;
-                                                    stateSet(() {});
-
-                                                    loading = false;
-                                                    stateSet(() {});
-                                                  }
-                                                },
-                                                child: Center(
-                                                    child: Text(
-                                                  'Verify & Login',
-                                                  style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 15.toFont),
-                                                )),
-                                              )),
-                                          SizedBox(height: 10.toHeight),
-                                          TextButton(
-                                              onPressed: () async {
-                                                if ((_emailController.text !=
-                                                        '') ||
-                                                    widget.isQR) {
-                                                  loading = true;
-                                                  stateSet(() {});
-
-                                                  loading = false;
-                                                  stateSet(() {});
-                                                }
-                                              },
-                                              child: Text(
-                                                'Resend Code',
-                                                style: TextStyle(
-                                                    color:
-                                                        ColorConstants.appColor,
-                                                    fontSize: 15.toFont),
-                                              )),
-                                          SizedBox(height: 10.toHeight),
-                                          if (!widget.isQR)
-                                            TextButton(
-                                                onPressed: () {
-                                                  otp = false;
-
-                                                  stateSet(() {});
-                                                },
-                                                child: Text(
-                                                  'Wrong email?',
-                                                  style: TextStyle(
-                                                      color: Colors.grey,
-                                                      fontSize: 15.toFont),
-                                                )),
-                                          if (widget.isQR)
-                                            TextButton(
-                                                onPressed: () {
-                                                  Navigator.pop(context);
-                                                  Navigator.pop(context);
-                                                },
-                                                child: Text(
-                                                  'Back',
-                                                  style: TextStyle(
-                                                      color: Colors.grey,
-                                                      fontSize: 15.toFont),
-                                                ))
-                                        ]),
-                                  if (!pair) ...<Widget>[
-                                    SizedBox(height: 15.toHeight),
-                                    SizedBox(
-                                        width:
-                                            MediaQuery.of(context).size.width,
-                                        height: SizeConfig().isTablet(context)
-                                            ? 50.toHeight
-                                            : null,
-                                        child: ElevatedButton(
-                                          style: ButtonStyle(
+          opacity: loading ? 0.3 : 1,
+          child: AbsorbPointer(
+            absorbing: loading,
+            child: AlertDialog(
+              title: Text(
+                'Setting up your account',
+                style: TextStyle(
+                  color: Theme.of(context).primaryColor,
+                  fontSize: AtOnboardingDimens.fontLarge,
+                ),
+              ),
+              content: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8.0.toFont),
+                child: SizedBox(
+                  width: _dialogWidth,
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: <Widget>[
+                      if (!isfreeAtsign &&
+                          !widget.isQR &&
+                          !isQrScanner) ...<Widget>[
+                        SizedBox(height: 15.toHeight),
+                        const Text(
+                          'Upload your backup key file?',
+                          style: TextStyle(
+                            fontSize: AtOnboardingDimens.fontNormal,
+                          ),
+                        ),
+                        SizedBox(height: 5.toHeight),
+                        SizedBox(
+                            width: MediaQuery.of(context).size.width.toWidth,
+                            height: SizeConfig().isTablet(context)
+                                ? 50.toHeight
+                                : null,
+                            child: ElevatedButton(
+                              style: Theme.of(context).brightness ==
+                                      Brightness.light
+                                  ? ButtonStyle(
+                                      backgroundColor:
+                                          MaterialStateProperty.all(
+                                              Colors.grey[800]))
+                                  : ButtonStyle(
+                                      backgroundColor:
+                                          MaterialStateProperty.all(
+                                              Colors.white)),
+                              onPressed: (Platform.isMacOS ||
+                                      Platform.isLinux ||
+                                      Platform.isWindows)
+                                  ? _uploadKeyFileForDesktop
+                                  : _uploadKeyFile,
+                              child: Text(
+                                'Upload Backup Key File',
+                                style: TextStyle(
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.light
+                                        ? Colors.white
+                                        : Colors.black,
+                                    fontSize: 15.toFont),
+                              ),
+                            )),
+                        SizedBox(height: 20.toHeight),
+                        Text(
+                          'Need an @sign?',
+                          style: Theme.of(context).brightness != Brightness.dark
+                              ? CustomTextStyles.fontR12primary
+                              : CustomTextStyles.fontR12secondary,
+                        ),
+                        SizedBox(height: 5.toHeight),
+                        SizedBox(
+                            width: MediaQuery.of(context).size.width.toWidth,
+                            height: SizeConfig().isTablet(context)
+                                ? 50.toHeight
+                                : null,
+                            child: ElevatedButton(
+                              style: Theme.of(context).brightness ==
+                                      Brightness.light
+                                  ? ButtonStyle(
+                                      backgroundColor:
+                                          MaterialStateProperty.all(
+                                              Colors.grey[800]))
+                                  : ButtonStyle(
+                                      backgroundColor:
+                                          MaterialStateProperty.all(
+                                              Colors.white)),
+                              onPressed: () async {
+                                _showGenerateScreen(context: context);
+                              },
+                              child: Text(
+                                'Generate Free @sign',
+                                style: TextStyle(
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.light
+                                        ? Colors.white
+                                        : Colors.black,
+                                    fontSize: 15.toFont),
+                              ),
+                            )),
+                        SizedBox(height: 20.toHeight),
+                        widget.hideQrScan
+                            ? const SizedBox()
+                            : Text('Have a QR Code?',
+                                style: Theme.of(context).brightness !=
+                                        Brightness.dark
+                                    ? CustomTextStyles.fontR12primary
+                                    : CustomTextStyles.fontR12secondary),
+                        widget.hideQrScan
+                            ? const SizedBox()
+                            : SizedBox(height: 5.toHeight),
+                        widget.hideQrScan
+                            ? const SizedBox()
+                            : (Platform.isAndroid || Platform.isIOS)
+                                ? SizedBox(
+                                    width: MediaQuery.of(context)
+                                        .size
+                                        .width
+                                        .toWidth,
+                                    height: SizeConfig().isTablet(context)
+                                        ? 50.toHeight
+                                        : null,
+                                    child: ElevatedButton(
+                                      style: Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? ButtonStyle(
                                               backgroundColor:
                                                   MaterialStateProperty.all(
-                                                      ColorConstants.appColor)),
-                                          onPressed: () async {
-                                            pair = true;
-                                            _emailController.text = '';
-                                            stateSet(() {});
-                                          },
-                                          child: Center(
-                                              child: Text(
-                                            'Pair',
-                                            style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 15.toFont),
-                                          )),
-                                        )),
-                                    const SizedBox(height: 10),
-                                    Center(
-                                        child: TextButton(
-                                            onPressed: () {
-                                              isfreeAtsign = false;
-                                              _atsignController.text = '';
-                                              stateSet(() {});
-                                            },
-                                            child: Text(
-                                              'Back',
-                                              style: TextStyle(
-                                                  color: Colors.grey,
-                                                  fontSize: 12.toFont),
-                                            )))
-                                  ]
-                                ]
-                              ],
-                            ),
-                          ))
-                      // : _getMessage(widget.message, widget.isErrorDialog),
-                      : Container(),
-                  actions: showClose
-                      ? <Widget>[
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                              onClose!();
-                            },
-                            child: Text(
-                              Strings.closeTitle,
-                              style: TextStyle(
-                                  color: ColorConstants.appColor,
-                                  fontSize: 14.toFont),
-                            ),
-                          ),
-                        ]
-                      : null,
-                ))),
+                                                      Colors.grey[800]))
+                                          : ButtonStyle(
+                                              backgroundColor:
+                                                  MaterialStateProperty.all(
+                                                      Colors.white)),
+                                      onPressed: () async {
+                                        ///TODO
+                                      },
+                                      child: Text(
+                                        'Scan QR code',
+                                        style: TextStyle(
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                        Brightness.light
+                                                    ? Colors.white
+                                                    : Colors.black,
+                                            fontSize: 15.toFont),
+                                      ),
+                                    ))
+                                : SizedBox(
+                                    width: MediaQuery.of(context).size.width,
+                                    height: SizeConfig().isTablet(context)
+                                        ? 50.toHeight
+                                        : null,
+                                    child: ElevatedButton(
+                                      style: ButtonStyle(
+                                          backgroundColor:
+                                              MaterialStateProperty.all(
+                                                  Colors.grey[800])),
+                                      onPressed: () async {},
+                                      child: Text(
+                                        'Upload QR code',
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 15.toFont),
+                                      ),
+                                    )),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              actions: <Widget>[
+                AtOnboardingSecondaryButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text(
+                    Strings.closeTitle,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ]);
     });
   }
@@ -842,7 +586,7 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
     await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AtOnboardingGenerateScreen(),
+      builder: (_) => const AtOnboardingGenerateScreen(),
     );
   }
 }
