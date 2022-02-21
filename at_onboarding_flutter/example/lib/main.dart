@@ -54,21 +54,17 @@ class _MyAppState extends State<MyApp> {
         ThemeMode themeMode = snapshot.data ?? ThemeMode.light;
         return MaterialApp(
           // * The onboarding screen (first screen)
-          theme: ThemeData().copyWith(
-            brightness: Brightness.light,
+          theme: ThemeData.light().copyWith(
             primaryColor: const Color(0xFFf4533d),
-            colorScheme:
-                ThemeData().colorScheme.copyWith(secondary: Colors.black),
-            backgroundColor: Colors.white,
-            scaffoldBackgroundColor: Colors.white,
+            colorScheme: ThemeData.light().colorScheme.copyWith(
+                  primary: const Color(0xFFf4533d),
+                ),
           ),
-          darkTheme: ThemeData().copyWith(
-            brightness: Brightness.dark,
+          darkTheme: ThemeData.dark().copyWith(
             primaryColor: Colors.blue,
-            colorScheme:
-                ThemeData().colorScheme.copyWith(secondary: Colors.white),
-            backgroundColor: Colors.grey[850],
-            scaffoldBackgroundColor: Colors.grey[850],
+            colorScheme: ThemeData.dark().colorScheme.copyWith(
+                  primary: Colors.blue,
+                ),
           ),
           themeMode: themeMode,
           home: Scaffold(
