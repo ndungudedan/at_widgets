@@ -1,5 +1,6 @@
 import 'package:at_onboarding_flutter/utils/color_constants.dart';
 import 'package:at_onboarding_flutter/utils/strings.dart';
+import 'package:at_onboarding_flutter/widgets/at_onboarding_button.dart';
 import 'package:flutter/material.dart';
 
 import 'at_onboarding_config.dart';
@@ -140,7 +141,7 @@ class _AtOnboardingResetScreenState extends State<AtOnboardingResetScreen> {
                         height: 10,
                       ),
                       Row(children: <Widget>[
-                        TextButton(
+                        AtOnboardingPrimaryButton(
                           onPressed: () {
                             Map<String, bool?> tempAtsignMap = <String, bool>{};
                             tempAtsignMap.addAll(atsignMap);
@@ -154,19 +155,15 @@ class _AtOnboardingResetScreenState extends State<AtOnboardingResetScreen> {
                               _resetDevice(tempAtsignMap.keys.toList());
                             }
                           },
-                          child: const Text(AppConstants.removeButton,
-                              style: TextStyle(
-                                  fontSize: 15,
-                                  color: Color.fromARGB(255, 240, 94, 62))),
+                          child: const Text(AppConstants.removeButton),
                         ),
                         const Spacer(),
-                        TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            child: const Text(AppConstants.cancelButton,
-                                style: TextStyle(
-                                    fontSize: 15, color: Colors.black)))
+                        AtOnboardingSecondaryButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text(AppConstants.cancelButton),
+                        )
                       ])
                     ],
                   ),
