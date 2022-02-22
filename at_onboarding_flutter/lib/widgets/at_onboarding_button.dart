@@ -1,3 +1,4 @@
+import 'package:at_sync_ui_flutter/at_sync_material.dart';
 import 'package:flutter/material.dart';
 
 abstract class AtOnboardingButton extends StatelessWidget {
@@ -5,6 +6,7 @@ abstract class AtOnboardingButton extends StatelessWidget {
   final Color? borderColor;
   final double? height;
   final double? width;
+  final bool isLoading;
   final VoidCallback? onPressed;
   final Widget child;
 
@@ -14,6 +16,7 @@ abstract class AtOnboardingButton extends StatelessWidget {
     required this.borderColor,
     required this.height,
     required this.width,
+    required this.isLoading,
     required this.onPressed,
     required this.child,
   }) : super(key: key);
@@ -26,6 +29,7 @@ class AtOnboardingPrimaryButton extends AtOnboardingButton {
     Color? borderColor,
     double? height,
     double? width,
+    bool isLoading = false,
     VoidCallback? onPressed,
     required Widget child,
   }) : super(
@@ -34,6 +38,7 @@ class AtOnboardingPrimaryButton extends AtOnboardingButton {
           borderColor: borderColor,
           height: height,
           width: width,
+          isLoading: isLoading,
           onPressed: onPressed,
           child: child,
         );
@@ -45,9 +50,9 @@ class AtOnboardingPrimaryButton extends AtOnboardingButton {
       height: height,
       width: width,
       child: TextButton(
-        onPressed: onPressed,
+        onPressed: isLoading ? null : onPressed,
         child: Container(
-          child: child,
+          child: isLoading ? const AtSyncIndicator(color: Colors.white) : child,
         ),
         style: ButtonStyle(
             backgroundColor: MaterialStateProperty.all<Color>(
@@ -70,6 +75,7 @@ class AtOnboardingSecondaryButton extends AtOnboardingButton {
     Color? borderColor,
     double? height,
     double? width,
+    bool isLoading = false,
     VoidCallback? onPressed,
     required Widget child,
   }) : super(
@@ -78,6 +84,7 @@ class AtOnboardingSecondaryButton extends AtOnboardingButton {
           borderColor: borderColor,
           height: height,
           width: width,
+          isLoading: isLoading,
           onPressed: onPressed,
           child: child,
         );
@@ -89,9 +96,11 @@ class AtOnboardingSecondaryButton extends AtOnboardingButton {
       height: height,
       width: width,
       child: TextButton(
-        onPressed: onPressed,
+        onPressed: isLoading ? null : onPressed,
         child: Container(
-          child: child,
+          child: isLoading
+              ? AtSyncIndicator(color: themeData.primaryColor)
+              : child,
         ),
         style: ButtonStyle(
             backgroundColor: MaterialStateProperty.all<Color>(

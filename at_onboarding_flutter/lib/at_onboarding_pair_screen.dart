@@ -1,35 +1,41 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:at_onboarding_flutter/at_onboarding_pair_screen.dart';
 import 'package:at_onboarding_flutter/services/size_config.dart';
 import 'package:at_onboarding_flutter/utils/at_onboarding_dimens.dart';
 import 'package:at_onboarding_flutter/utils/color_constants.dart';
 import 'package:at_onboarding_flutter/utils/strings.dart';
 import 'package:at_onboarding_flutter/widgets/at_onboarding_button.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'screens/web_view_screen.dart';
 import 'services/free_atsign_service.dart';
 import 'widgets/custom_dialog.dart';
 
-class AtOnboardingGenerateScreen extends StatefulWidget {
-  const AtOnboardingGenerateScreen({Key? key}) : super(key: key);
+class AtOnboardingPairScreen extends StatefulWidget {
+  final String atSign;
+
+  ///will hide webpage references.
+  final bool hideReferences;
+
+  const AtOnboardingPairScreen({
+    Key? key,
+    required this.atSign,
+    required this.hideReferences,
+  }) : super(key: key);
 
   @override
-  State<AtOnboardingGenerateScreen> createState() =>
-      _AtOnboardingGenerateScreenState();
+  State<AtOnboardingPairScreen> createState() => _AtOnboardingPairScreenState();
 }
 
-class _AtOnboardingGenerateScreenState
-    extends State<AtOnboardingGenerateScreen> {
-  final TextEditingController _atsignController = TextEditingController();
+class _AtOnboardingPairScreenState extends State<AtOnboardingPairScreen> {
+  final TextEditingController _emailController = TextEditingController();
   final FreeAtsignService _freeAtsignService = FreeAtsignService();
 
-  bool loading = false;
-
-  bool isGenerating = false;
+  bool isParing = false;
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +48,7 @@ class _AtOnboardingGenerateScreenState
         (BuildContext context, void Function(void Function()) stateSet) {
       return Stack(children: <Widget>[
         AbsorbPointer(
-          absorbing: loading,
+          absorbing: isParing,
           child: AlertDialog(
             title: Text(
               'Setting up your account',
@@ -55,7 +61,7 @@ class _AtOnboardingGenerateScreenState
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextFormField(
-                  enabled: false,
+                  enabled: true,
                   // style: Theme.of(context).brightness == Brightness.dark
                   //     ? CustomTextStyles.fontR14secondary
                   //     : CustomTextStyles.fontR14primary,
@@ -68,7 +74,7 @@ class _AtOnboardingGenerateScreenState
                   onChanged: (String value) {
                     stateSet(() {});
                   },
-                  controller: _atsignController,
+                  controller: _emailController,
                   inputFormatters: <TextInputFormatter>[
                     LengthLimitingTextInputFormatter(80),
                     // This inputFormatter function will convert all the input to lowercase.
@@ -87,7 +93,6 @@ class _AtOnboardingGenerateScreenState
                       fontSize: 12.toFont,
                     ),
                     hintText: Strings.atsignHintText,
-                    prefixText: '@',
                     prefixStyle: TextStyle(
                         color: Theme.of(context).primaryColor,
                         fontSize: 15.toFont),
@@ -104,7 +109,7 @@ class _AtOnboardingGenerateScreenState
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     const Flexible(
-                      child: Text('Free @sign',
+                      child: Text('Enter your email',
                           style: TextStyle(
                               fontSize: AtOnboardingDimens.fontNormal)),
                     ),
@@ -119,56 +124,27 @@ class _AtOnboardingGenerateScreenState
                 ),
                 SizedBox(
                   width: MediaQuery.of(context).size.width,
-                  height: SizeConfig().isTablet(context) ? 50.toHeight : null,
-                  child: AtOnboardingSecondaryButton(
-                    onPressed: () async {
-                      loading = true;
-                      stateSet(() {});
-                      _atsignController.text =
-                          await getFreeAtsign(context) ?? '';
-                      loading = false;
-                      stateSet(() {});
-                    },
-                    isLoading: isGenerating,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Center(
-                            child: Text(
-                          'Refresh',
-                          style: TextStyle(fontSize: 15.toFont),
-                        )),
-                        const Icon(
-                          Icons.refresh,
-                          size: 20,
-                        )
-                      ],
+                  child: AtOnboardingPrimaryButton(
+                    isLoading: isParing,
+                    onPressed: _onSendCodePressed,
+                    child: Center(
+                      child: Text(
+                        'Send Code',
+                        style:
+                            TextStyle(color: Colors.white, fontSize: 15.toFont),
+                      ),
                     ),
                   ),
                 ),
-                SizedBox(
-                    width: MediaQuery.of(context).size.width,
-                    height: SizeConfig().isTablet(context) ? 50.toHeight : null,
-                    child: AtOnboardingPrimaryButton(
-                      onPressed: _showPairScreen,
-                      child: const Text(
-                        'Pair',
-                        style: TextStyle(
-                          fontSize: AtOnboardingDimens.fontNormal,
-                        ),
-                      ),
-                    )),
               ],
             ),
             actions: <Widget>[
               AtOnboardingSecondaryButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  //Todo
-                  // widget.onClose!();
                 },
                 child: const Text(
-                  Strings.closeTitle,
+                  Strings.cancelButton,
                   style: TextStyle(
                     fontSize: AtOnboardingDimens.fontNormal,
                   ),
@@ -179,29 +155,6 @@ class _AtOnboardingGenerateScreenState
         ),
       ]);
     });
-  }
-
-  Future<String?> getFreeAtsign(BuildContext context) async {
-    setState(() {
-      isGenerating = true;
-    });
-    dynamic data;
-    String? atsign;
-    dynamic response = await _freeAtsignService.getFreeAtsigns();
-    if (response.statusCode == 200) {
-      data = response.body;
-      data = jsonDecode(data);
-      atsign = data['data']['atsign'];
-    } else {
-      data = response.body;
-      data = jsonDecode(data);
-      String? errorMessage = data['message'];
-      await showErrorDialog(context, errorMessage);
-    }
-    setState(() {
-      isGenerating = false;
-    });
-    return atsign;
   }
 
   Future<CustomDialog?> showErrorDialog(
@@ -230,13 +183,107 @@ class _AtOnboardingGenerateScreenState
                 )));
   }
 
-  void _showPairScreen() async {
-    final String atSign = _atsignController.text;
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) =>
-          AtOnboardingPairScreen(atSign: atSign, hideReferences: false),
-    );
+  void _onSendCodePressed() async {
+    if (_emailController.text != '') {
+      isParing = true;
+      setState(() {});
+      bool status = false;
+      // if (!wrongEmail) {
+      status =
+          await registerPersona(widget.atSign, _emailController.text, context);
+      // } else {
+      //   status = await registerPersona(
+      //       widget.atSign, _emailController.text, context,
+      //       oldEmail: oldEmail);
+      // }
+      isParing = false;
+      setState(() {});
+      if (status) {
+
+      }
+    }
+  }
+
+  Future<bool> registerPersona(
+      String atsign, String email, BuildContext context,
+      {String? oldEmail}) async {
+    dynamic data;
+    bool status = false;
+    // String atsign;
+    dynamic response = await _freeAtsignService.registerPerson(atsign, email,
+        oldEmail: oldEmail);
+    if (response.statusCode == 200) {
+      data = response.body;
+      data = jsonDecode(data);
+      status = true;
+      // atsign = data['data']['atsign'];
+    } else {
+      data = response.body;
+      data = jsonDecode(data);
+      String errorMessage = data['message'];
+      if (errorMessage.contains('Invalid Email')) {
+        oldEmail = email;
+      }
+      if (errorMessage.contains('maximum number of free @signs')) {
+        await showlimitDialog(context);
+      } else {
+        await showErrorDialog(context, errorMessage);
+      }
+    }
+    return status;
+  }
+
+  Future<AlertDialog?> showlimitDialog(BuildContext context) async {
+    return showDialog<AlertDialog>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            content: RichText(
+              text: TextSpan(
+                children: <InlineSpan>[
+                  TextSpan(
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 16.toFont,
+                        letterSpacing: 0.5),
+                    text:
+                        'Oops! You already have the maximum number of free @signs. Please login to ',
+                  ),
+                  TextSpan(
+                      text: 'https://my.atsign.com',
+                      style: TextStyle(
+                          fontSize: 16.toFont,
+                          color: ColorConstants.appColor,
+                          letterSpacing: 0.5,
+                          decoration: TextDecoration.underline),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () async {
+                          String url = 'https://my.atsign.com';
+                          if (!widget.hideReferences && await canLaunch(url)) {
+                            await launch(url);
+                          }
+                        }),
+                  TextSpan(
+                    text: '  to select one of your existing @signs.',
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 16.toFont,
+                        letterSpacing: 0.5),
+                  ),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text(
+                    'Close',
+                    style: TextStyle(color: ColorConstants.appColor),
+                  ))
+            ],
+          );
+        });
   }
 }

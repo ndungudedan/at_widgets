@@ -580,7 +580,7 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
     });
   }
 
-  static _showGenerateScreen({
+  void _showGenerateScreen({
     required BuildContext context,
   }) async {
     await showDialog(
