@@ -22,6 +22,9 @@ class AtOnboardingOTPScreen extends StatefulWidget {
   final String atSign;
   final String email;
 
+  final Function({required String atSign, required String secret})?
+      onGenerateSuccess;
+
   ///will hide webpage references.
   final bool hideReferences;
 
@@ -30,6 +33,7 @@ class AtOnboardingOTPScreen extends StatefulWidget {
     required this.atSign,
     required this.email,
     required this.hideReferences,
+    required this.onGenerateSuccess,
   }) : super(key: key);
 
   @override
@@ -222,7 +226,7 @@ class _AtOnboardingOTPScreenState extends State<AtOnboardingOTPScreen> {
     if (result != null && result != limitExceeded) {
       List<String> params = result.split(':');
       Navigator.pop(context);
-      //Todo
+      widget.onGenerateSuccess?.call(atSign: params[0], secret: params[1]);
       // widget.onValidate!(
       //     params[0],
       //     params[1],

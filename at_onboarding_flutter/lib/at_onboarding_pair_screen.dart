@@ -22,10 +22,14 @@ class AtOnboardingPairScreen extends StatefulWidget {
   ///will hide webpage references.
   final bool hideReferences;
 
+  final Function({required String atSign, required String secret})?
+      onGenerateSuccess;
+
   const AtOnboardingPairScreen({
     Key? key,
     required this.atSign,
     required this.hideReferences,
+    required this.onGenerateSuccess,
   }) : super(key: key);
 
   @override
@@ -315,6 +319,10 @@ class _AtOnboardingPairScreenState extends State<AtOnboardingPairScreen> {
         atSign: atSign,
         hideReferences: false,
         email: email,
+        onGenerateSuccess: ({required String atSign, required String secret}) {
+          Navigator.pop(context);
+          widget.onGenerateSuccess?.call(atSign: atSign, secret: secret);
+        },
       ),
     );
   }

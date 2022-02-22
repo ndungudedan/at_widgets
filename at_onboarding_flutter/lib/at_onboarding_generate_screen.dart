@@ -15,7 +15,13 @@ import 'services/free_atsign_service.dart';
 import 'widgets/custom_dialog.dart';
 
 class AtOnboardingGenerateScreen extends StatefulWidget {
-  const AtOnboardingGenerateScreen({Key? key}) : super(key: key);
+  final Function({required String atSign, required String secret})?
+      onGenerateSuccess;
+
+  const AtOnboardingGenerateScreen({
+    Key? key,
+    required this.onGenerateSuccess,
+  }) : super(key: key);
 
   @override
   State<AtOnboardingGenerateScreen> createState() =>
@@ -239,8 +245,14 @@ class _AtOnboardingGenerateScreenState
     await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) =>
-          AtOnboardingPairScreen(atSign: atSign, hideReferences: false),
+      builder: (_) => AtOnboardingPairScreen(
+        atSign: atSign,
+        hideReferences: false,
+        onGenerateSuccess: ({required String atSign, required String secret}) {
+          Navigator.pop(context);
+          widget.onGenerateSuccess?.call(atSign: atSign, secret: secret);
+        },
+      ),
     );
   }
 }

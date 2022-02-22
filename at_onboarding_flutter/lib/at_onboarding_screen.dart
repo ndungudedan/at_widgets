@@ -23,6 +23,7 @@ import 'package:flutter_qr_reader/flutter_qr_reader.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 
+import 'screens/private_key_qrcode_generator.dart';
 import 'widgets/at_onboarding_button.dart';
 
 class AtOnboardingScreen extends StatefulWidget {
@@ -34,6 +35,10 @@ class AtOnboardingScreen extends StatefulWidget {
   final bool hideReferences;
   final bool hideQrScan;
 
+  final onboardStatus = OnboardingStatus.ACTIVATE;
+
+  final VoidCallback? onBoardingSuccess;
+
   const AtOnboardingScreen({
     Key? key,
     required this.config,
@@ -41,6 +46,7 @@ class AtOnboardingScreen extends StatefulWidget {
     this.isQR = false,
     this.hideReferences = false,
     this.hideQrScan = false,
+    this.onBoardingSuccess,
   }) : super(key: key);
 
   @override
@@ -586,11 +592,11 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
         ),
         loading
             ? Center(
-              child: CircularProgressIndicator(
-                valueColor:
-                    AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
-              ),
-            )
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                      Theme.of(context).primaryColor),
+                ),
+              )
             : const SizedBox()
       ]);
     });
@@ -602,7 +608,91 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
     await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const AtOnboardingGenerateScreen(),
+      builder: (_) => AtOnboardingGenerateScreen(
+        onGenerateSuccess: ({required String atSign, required String secret}) {
+          _processSharedSecret(atSign, secret);
+        },
+      ),
     );
   }
+
+  Future<dynamic> _processSharedSecret(String atsign, String secret,
+      {bool isScanner = false}) async {
+    dynamic authResponse;
+    try {
+      setState(() {
+        loading = true;
+      });
+      bool isExist = await _onboardingService.isExistingAtsign(atsign);
+      if (isExist) {
+        setState(() {
+          loading = false;
+        });
+        await _showAlertDialog(CustomStrings().pairedAtsign(atsign));
+        return;
+      }
+      authResponse = await _onboardingService.authenticate(atsign,
+          cramSecret: secret, status: widget.onboardStatus);
+      if (authResponse == ResponseStatus.authSuccess) {
+        if (widget.onboardStatus == OnboardingStatus.ACTIVATE ||
+            widget.onboardStatus == OnboardingStatus.RESTORE) {
+          _onboardingService.onboardFunc(_onboardingService.atClientServiceMap,
+              _onboardingService.currentAtsign);
+          if (_onboardingService.nextScreen == null) {
+            if (isScanner) Navigator.pop(context);
+            Navigator.pop(context);
+            widget.onBoardingSuccess?.call();
+            return;
+          }
+          if (isScanner) Navigator.pop(context);
+          await Navigator.pushReplacement(
+              context,
+              MaterialPageRoute<OnboardingService>(
+                  builder: (BuildContext context) =>
+                      _onboardingService.nextScreen!));
+        } else {
+          await Navigator.pushReplacement(
+            context,
+            MaterialPageRoute<PrivateKeyQRCodeGenScreen>(
+                builder: (BuildContext context) =>
+                    const PrivateKeyQRCodeGenScreen()),
+          );
+        }
+      }
+    } catch (e) {
+      setState(() {
+        loading = false;
+      });
+      if (e == ResponseStatus.authFailed) {
+        _logger.severe('Error in authenticateWith cram secret');
+        await _showAlertDialog(e, title: 'Auth Failed');
+      } else if (e == ResponseStatus.serverNotReached && _isContinue) {
+        _isServerCheck = _isContinue;
+        await _processSharedSecret(atsign, secret);
+      } else if (e == ResponseStatus.timeOut) {
+        await _showAlertDialog(e, title: 'Response Time out');
+      }
+    }
+    return authResponse;
+  }
+
+  Future<void> _showAlertDialog(dynamic errorMessage,
+      {bool? isPkam,
+        String? title,
+        bool? getClose,
+        Function? onClose}) async =>
+      showDialog(
+          barrierDismissible: false,
+          context: context,
+          builder: (BuildContext context) {
+            return CustomDialog(
+                context: context,
+                hideReferences: widget.hideReferences,
+                hideQrScan: widget.hideQrScan,
+                isErrorDialog: true,
+                showClose: true,
+                message: errorMessage,
+                title: title,
+                onClose: getClose == true ? onClose : () {});
+          });
 }
