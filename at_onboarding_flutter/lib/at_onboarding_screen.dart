@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'package:at_backupkey_flutter/utils/color_constants.dart';
 import 'package:at_client_mobile/at_client_mobile.dart';
 import 'package:at_onboarding_flutter/at_onboarding_config.dart';
 import 'package:at_onboarding_flutter/at_onboarding_generate_screen.dart';
@@ -11,6 +12,8 @@ import 'package:at_onboarding_flutter/utils/at_onboarding_dimens.dart';
 import 'package:at_onboarding_flutter/utils/custom_textstyles.dart';
 import 'package:at_onboarding_flutter/utils/response_status.dart';
 import 'package:at_onboarding_flutter/utils/strings.dart';
+import 'package:at_onboarding_flutter/widgets/custom_button.dart';
+import 'package:at_onboarding_flutter/widgets/custom_dialog.dart';
 import 'package:at_onboarding_flutter/widgets/custom_strings.dart';
 import 'package:at_utils/at_logger.dart';
 import 'package:file_picker/file_picker.dart';
@@ -134,7 +137,7 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
         File selectedFile = File(path);
         int length = selectedFile.lengthSync();
         if (length < 10) {
-          await _showAlertDialog(_incorrectKeyFile);
+          await showErrorDialog(context, _incorrectKeyFile);
           return;
         }
 
@@ -175,7 +178,7 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
           bool result = _validatePickedFileContents(fileContents);
           _logger.finer('result after extracting data is......$result');
           if (!result) {
-            await _showAlertDialog(_incorrectKeyFile);
+            await showErrorDialog(context, _incorrectKeyFile);
             setState(() {
               loading = false;
             });
@@ -193,7 +196,7 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
         aesKey = params[1];
       }
       if (fileContents == null || (aesKey == null && atsign == null)) {
-        // await _showAlertDialog(_incorrectKeyFile);
+        await showErrorDialog(context, _incorrectKeyFile);
         setState(() {
           loading = false;
         });
@@ -201,7 +204,8 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
       } else if (OnboardingService.getInstance().formatAtSign(atsign) !=
               _pairingAtsign &&
           _pairingAtsign != null) {
-        await _showAlertDialog(CustomStrings().atsignMismatch(_pairingAtsign));
+        await showErrorDialog(
+            context, CustomStrings().atsignMismatch(_pairingAtsign));
         setState(() {
           loading = false;
         });
@@ -216,7 +220,7 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
         loading = false;
       });
       _logger.severe('Uploading backup zip file throws $error');
-      await _showAlertDialog(_failedFileProcessing);
+      await showErrorDialog(context, _failedFileProcessing);
     }
   }
 
@@ -237,7 +241,7 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
       File selectedFile = File(path);
       int length = selectedFile.lengthSync();
       if (length < 10) {
-        await _showAlertDialog(_incorrectKeyFile);
+        await showErrorDialog(context, _incorrectKeyFile);
         return;
       }
 
@@ -253,7 +257,7 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
         aesKey = params[1];
       }
       if (fileContents.isEmpty || (aesKey == null && atsign == null)) {
-        await _showAlertDialog(_incorrectKeyFile);
+        await showErrorDialog(context, _incorrectKeyFile);
         setState(() {
           loading = false;
         });
@@ -261,7 +265,8 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
       } else if (OnboardingService.getInstance().formatAtSign(atsign) !=
               _pairingAtsign &&
           _pairingAtsign != null) {
-        await _showAlertDialog(CustomStrings().atsignMismatch(_pairingAtsign));
+        await showErrorDialog(
+            context, CustomStrings().atsignMismatch(_pairingAtsign));
         setState(() {
           loading = false;
         });
@@ -276,7 +281,7 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
         loading = false;
       });
       _logger.severe('Uploading backup zip file throws $error');
-      await _showAlertDialog(_failedFileProcessing);
+      await showErrorDialog(context, _failedFileProcessing);
     }
   }
 
@@ -314,7 +319,7 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
         setState(() {
           loading = false;
         });
-        // await _showAlertDialog(CustomStrings().pairedAtsign(atsign));
+        await showErrorDialog(context, CustomStrings().pairedAtsign(atsign));
         return;
       }
       authResponse = await _onboardingService.authenticate(atsign,
@@ -344,27 +349,30 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
         await _processAESKey(atsign, aesKey, contents);
       } else if (e == ResponseStatus.authFailed) {
         _logger.severe('Error in authenticateWithAESKey');
-        Navigator.of(context).pop();
-        // await _showAlertDialog(e, isPkam: true, title: 'Auth Failed');
+        await showErrorDialog(context, 'Auth Failed');
       } else if (e == ResponseStatus.timeOut) {
-        await _showAlertDialog(e, title: 'Response Time out');
+        await showErrorDialog(context, 'Response Time out');
       } else {
         _logger.warning(e);
       }
     }
   }
 
-  Future<void> _showAlertDialog(dynamic errorMessage,
-          {bool? isPkam,
-          String? title,
-          bool? getClose,
-          Function? onClose}) async =>
-      showDialog(
-          barrierDismissible: false,
-          context: context,
-          builder: (BuildContext context) {
-            return const Text("Error");
-          });
+  Future<CustomDialog?> showErrorDialog(
+      BuildContext context, String? errorMessage) async {
+    return showDialog<CustomDialog>(
+        barrierDismissible: false,
+        context: context,
+        builder: (BuildContext context) {
+          return CustomDialog(
+            context: context,
+            isErrorDialog: true,
+            showClose: true,
+            message: errorMessage,
+            onClose: () {},
+          );
+        });
+  }
 
   bool _validatePickedFileContents(String fileContents) {
     bool result = fileContents
@@ -396,7 +404,7 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
         (BuildContext context, void Function(void Function()) stateSet) {
       return Stack(children: <Widget>[
         Opacity(
-          opacity: loading ? 0.3 : 1,
+          opacity: 1,
           child: AbsorbPointer(
             absorbing: loading,
             child: AlertDialog(
@@ -576,6 +584,14 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
             ),
           ),
         ),
+        loading
+            ? Center(
+              child: CircularProgressIndicator(
+                valueColor:
+                    AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
+              ),
+            )
+            : const SizedBox()
       ]);
     });
   }
