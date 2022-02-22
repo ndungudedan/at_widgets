@@ -32,6 +32,12 @@ class _AtOnboardingGenerateScreenState
   bool isGenerating = false;
 
   @override
+  void initState() {
+    super.initState();
+    _getFreeAtsign();
+  }
+
+  @override
   Widget build(BuildContext context) {
     double _dialogWidth = double.maxFinite;
     if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
@@ -124,8 +130,7 @@ class _AtOnboardingGenerateScreenState
                     onPressed: () async {
                       loading = true;
                       stateSet(() {});
-                      _atsignController.text =
-                          await getFreeAtsign(context) ?? '';
+                      _atsignController.text = await _getFreeAtsign() ?? '';
                       loading = false;
                       stateSet(() {});
                     },
@@ -181,7 +186,7 @@ class _AtOnboardingGenerateScreenState
     });
   }
 
-  Future<String?> getFreeAtsign(BuildContext context) async {
+  Future<String?> _getFreeAtsign() async {
     setState(() {
       isGenerating = true;
     });
@@ -196,7 +201,7 @@ class _AtOnboardingGenerateScreenState
       data = response.body;
       data = jsonDecode(data);
       String? errorMessage = data['message'];
-      await showErrorDialog(context, errorMessage);
+      await showErrorDialog(errorMessage);
     }
     setState(() {
       isGenerating = false;
@@ -204,8 +209,7 @@ class _AtOnboardingGenerateScreenState
     return atsign;
   }
 
-  Future<CustomDialog?> showErrorDialog(
-      BuildContext context, String? errorMessage) async {
+  Future<CustomDialog?> showErrorDialog(String? errorMessage) async {
     return showDialog<CustomDialog>(
         barrierDismissible: false,
         context: context,

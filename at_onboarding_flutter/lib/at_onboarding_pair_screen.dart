@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'at_onboarding_otp_screen.dart';
 import 'screens/web_view_screen.dart';
 import 'services/free_atsign_service.dart';
 import 'widgets/custom_dialog.dart';
@@ -38,6 +39,11 @@ class _AtOnboardingPairScreenState extends State<AtOnboardingPairScreen> {
   bool isParing = false;
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     double _dialogWidth = double.maxFinite;
     if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
@@ -60,6 +66,23 @@ class _AtOnboardingPairScreenState extends State<AtOnboardingPairScreen> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    const Flexible(
+                      child: Text('Enter your email',
+                          style: TextStyle(
+                              fontSize: AtOnboardingDimens.fontNormal)),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.help,
+                        size: 18.toFont,
+                      ),
+                      onPressed: _showReferenceWebview,
+                    )
+                  ],
+                ),
                 TextFormField(
                   enabled: true,
                   // style: Theme.of(context).brightness == Brightness.dark
@@ -92,7 +115,6 @@ class _AtOnboardingPairScreenState extends State<AtOnboardingPairScreen> {
                     errorStyle: TextStyle(
                       fontSize: 12.toFont,
                     ),
-                    hintText: Strings.atsignHintText,
                     prefixStyle: TextStyle(
                         color: Theme.of(context).primaryColor,
                         fontSize: 15.toFont),
@@ -105,22 +127,16 @@ class _AtOnboardingPairScreenState extends State<AtOnboardingPairScreen> {
                         horizontal: AtOnboardingDimens.paddingSmall.toWidth),
                   ),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    const Flexible(
-                      child: Text('Enter your email',
-                          style: TextStyle(
-                              fontSize: AtOnboardingDimens.fontNormal)),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.help,
-                        size: 18.toFont,
-                      ),
-                      onPressed: _showReferenceWebview,
-                    )
-                  ],
+                SizedBox(
+                  height: 10.toHeight,
+                ),
+                Text(
+                  Strings.emailNote,
+                  style: TextStyle(
+                      fontSize: 13.toFont, fontWeight: FontWeight.w600),
+                ),
+                SizedBox(
+                  height: 10.toHeight,
                 ),
                 SizedBox(
                   width: MediaQuery.of(context).size.width,
@@ -199,7 +215,9 @@ class _AtOnboardingPairScreenState extends State<AtOnboardingPairScreen> {
       isParing = false;
       setState(() {});
       if (status) {
-
+        _showOTPScreen();
+      } else {
+        //Todo:
       }
     }
   }
@@ -285,5 +303,19 @@ class _AtOnboardingPairScreenState extends State<AtOnboardingPairScreen> {
             ],
           );
         });
+  }
+
+  void _showOTPScreen() async {
+    final String atSign = widget.atSign;
+    final String email = _emailController.text;
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AtOnboardingOTPScreen(
+        atSign: atSign,
+        hideReferences: false,
+        email: email,
+      ),
+    );
   }
 }
