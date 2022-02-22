@@ -5,13 +5,48 @@ import 'package:at_onboarding_flutter/utils/color_constants.dart';
 import 'package:flutter/material.dart';
 
 import 'at_onboarding_config.dart';
+import 'at_onboarding_init_screen.dart';
 import 'screens/onboarding_widget.dart';
 import 'utils/app_constants.dart';
 
 class AtOnboarding {
+  static onboard({
+    required BuildContext context,
+    required AtOnboardingConfig config,
+    VoidCallback? onSuccess,
+    VoidCallback? onError,
+  }) async {
+    ColorConstants.darkTheme = Theme.of(context).brightness == Brightness.dark;
+    AppConstants.setApiKey(
+        config.appAPIKey ?? (AppConstants.rootEnvironment.apikey ?? ''));
+    AppConstants.rootDomain =
+        config.domain ?? AppConstants.rootEnvironment.domain;
+    SizeConfig().init(context);
+    final result = await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AtOnboardingInitScreen(config: config),
+    );
+    if (result is AtOnboardingResult) {
+      switch (result) {
+        case AtOnboardingResult.success:
+          onSuccess?.call();
+          break;
+        case AtOnboardingResult.error:
+          onError?.call();
+          break;
+        case AtOnboardingResult.notFound:
+          start(context: context, config: config);
+          break;
+      }
+    }
+  }
+
   static start({
     required BuildContext context,
     required AtOnboardingConfig config,
+    VoidCallback? onSuccess,
+    VoidCallback? onError,
   }) async {
     ColorConstants.darkTheme = Theme.of(context).brightness == Brightness.dark;
     AppConstants.setApiKey(

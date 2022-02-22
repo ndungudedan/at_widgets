@@ -31,7 +31,8 @@ class AtOnboardingScreen extends StatefulWidget {
 
   /// If true, shows the custom dialog to get an atsign
   final bool getAtSign;
-  final bool isQR;
+
+  // final bool isQR;
   final bool hideReferences;
   final bool hideQrScan;
 
@@ -43,7 +44,7 @@ class AtOnboardingScreen extends StatefulWidget {
     Key? key,
     required this.config,
     this.getAtSign = false,
-    this.isQR = false,
+    // this.isQR = false,
     this.hideReferences = false,
     this.hideQrScan = false,
     this.onBoardingSuccess,
@@ -63,11 +64,12 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
 
   bool loading = false;
   bool permissionGrated = false;
-  bool otp = false;
-  bool pair = false;
-  bool isfreeAtsign = false;
-  bool isAtsignForm = true;
-  bool isQrScanner = false;
+
+  // bool otp = false;
+  // bool pair = false;
+  // bool isfreeAtsign = false;
+  // bool isAtsignForm = true;
+  // bool isQrScanner = false;
   bool _isServerCheck = false;
   bool _isContinue = true;
   String? _pairingAtsign;
@@ -396,210 +398,104 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);
-    if (widget.isQR) {
-      otp = true;
-      pair = true;
-      isfreeAtsign = true;
-    }
+    // if (widget.isQR) {
+    //   otp = true;
+    //   pair = true;
+    //   isfreeAtsign = true;
+    // }
     double _dialogWidth = double.maxFinite;
     if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
       _dialogWidth = 400;
     }
 
-    return StatefulBuilder(builder:
-        (BuildContext context, void Function(void Function()) stateSet) {
-      return Stack(children: <Widget>[
-        Opacity(
-          opacity: 1,
-          child: AbsorbPointer(
-            absorbing: loading,
-            child: AlertDialog(
-              title: Text(
-                'Setting up your account',
-                style: TextStyle(
-                  color: Theme.of(context).primaryColor,
-                  fontSize: AtOnboardingDimens.fontLarge,
-                ),
-              ),
-              content: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8.0.toFont),
-                child: SizedBox(
-                  width: _dialogWidth,
-                  child: ListView(
-                    shrinkWrap: true,
-                    children: <Widget>[
-                      if (!isfreeAtsign &&
-                          !widget.isQR &&
-                          !isQrScanner) ...<Widget>[
-                        SizedBox(height: 15.toHeight),
-                        const Text(
-                          'Upload your backup key file?',
-                          style: TextStyle(
-                            fontSize: AtOnboardingDimens.fontNormal,
-                          ),
-                        ),
-                        SizedBox(height: 5.toHeight),
-                        SizedBox(
-                            width: MediaQuery.of(context).size.width.toWidth,
-                            height: SizeConfig().isTablet(context)
-                                ? 50.toHeight
-                                : null,
-                            child: ElevatedButton(
-                              style: Theme.of(context).brightness ==
-                                      Brightness.light
-                                  ? ButtonStyle(
-                                      backgroundColor:
-                                          MaterialStateProperty.all(
-                                              Colors.grey[800]))
-                                  : ButtonStyle(
-                                      backgroundColor:
-                                          MaterialStateProperty.all(
-                                              Colors.white)),
-                              onPressed: (Platform.isMacOS ||
-                                      Platform.isLinux ||
-                                      Platform.isWindows)
-                                  ? _uploadKeyFileForDesktop
-                                  : _uploadKeyFile,
-                              child: Text(
-                                'Upload Backup Key File',
-                                style: TextStyle(
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.light
-                                        ? Colors.white
-                                        : Colors.black,
-                                    fontSize: 15.toFont),
-                              ),
-                            )),
-                        SizedBox(height: 20.toHeight),
-                        Text(
-                          'Need an @sign?',
-                          style: Theme.of(context).brightness != Brightness.dark
-                              ? CustomTextStyles.fontR12primary
-                              : CustomTextStyles.fontR12secondary,
-                        ),
-                        SizedBox(height: 5.toHeight),
-                        SizedBox(
-                            width: MediaQuery.of(context).size.width.toWidth,
-                            height: SizeConfig().isTablet(context)
-                                ? 50.toHeight
-                                : null,
-                            child: ElevatedButton(
-                              style: Theme.of(context).brightness ==
-                                      Brightness.light
-                                  ? ButtonStyle(
-                                      backgroundColor:
-                                          MaterialStateProperty.all(
-                                              Colors.grey[800]))
-                                  : ButtonStyle(
-                                      backgroundColor:
-                                          MaterialStateProperty.all(
-                                              Colors.white)),
-                              onPressed: () async {
-                                _showGenerateScreen(context: context);
-                              },
-                              child: Text(
-                                'Generate Free @sign',
-                                style: TextStyle(
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.light
-                                        ? Colors.white
-                                        : Colors.black,
-                                    fontSize: 15.toFont),
-                              ),
-                            )),
-                        SizedBox(height: 20.toHeight),
-                        widget.hideQrScan
-                            ? const SizedBox()
-                            : Text('Have a QR Code?',
-                                style: Theme.of(context).brightness !=
-                                        Brightness.dark
-                                    ? CustomTextStyles.fontR12primary
-                                    : CustomTextStyles.fontR12secondary),
-                        widget.hideQrScan
-                            ? const SizedBox()
-                            : SizedBox(height: 5.toHeight),
-                        widget.hideQrScan
-                            ? const SizedBox()
-                            : (Platform.isAndroid || Platform.isIOS)
-                                ? SizedBox(
-                                    width: MediaQuery.of(context)
-                                        .size
-                                        .width
-                                        .toWidth,
-                                    height: SizeConfig().isTablet(context)
-                                        ? 50.toHeight
-                                        : null,
-                                    child: ElevatedButton(
-                                      style: Theme.of(context).brightness ==
-                                              Brightness.light
-                                          ? ButtonStyle(
-                                              backgroundColor:
-                                                  MaterialStateProperty.all(
-                                                      Colors.grey[800]))
-                                          : ButtonStyle(
-                                              backgroundColor:
-                                                  MaterialStateProperty.all(
-                                                      Colors.white)),
-                                      onPressed: () async {
-                                        ///TODO
-                                      },
-                                      child: Text(
-                                        'Scan QR code',
-                                        style: TextStyle(
-                                            color:
-                                                Theme.of(context).brightness ==
-                                                        Brightness.light
-                                                    ? Colors.white
-                                                    : Colors.black,
-                                            fontSize: 15.toFont),
-                                      ),
-                                    ))
-                                : SizedBox(
-                                    width: MediaQuery.of(context).size.width,
-                                    height: SizeConfig().isTablet(context)
-                                        ? 50.toHeight
-                                        : null,
-                                    child: ElevatedButton(
-                                      style: ButtonStyle(
-                                          backgroundColor:
-                                              MaterialStateProperty.all(
-                                                  Colors.grey[800])),
-                                      onPressed: () async {},
-                                      child: Text(
-                                        'Upload QR code',
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 15.toFont),
-                                      ),
-                                    )),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-              actions: <Widget>[
-                AtOnboardingSecondaryButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    Strings.closeTitle,
-                  ),
-                ),
-              ],
-            ),
+    return AbsorbPointer(
+      absorbing: loading,
+      child: AlertDialog(
+        title: Text(
+          'Setting up your account',
+          style: TextStyle(
+            color: Theme.of(context).primaryColor,
+            fontSize: AtOnboardingDimens.fontLarge,
           ),
         ),
-        loading
-            ? Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                      Theme.of(context).primaryColor),
+        content: SizedBox(
+          width: _dialogWidth,
+          child: ListView(
+            shrinkWrap: true,
+            children: <Widget>[
+              SizedBox(height: 5.toHeight),
+              AtOnboardingPrimaryButton(
+                onPressed:
+                    (Platform.isMacOS || Platform.isLinux || Platform.isWindows)
+                        ? _uploadKeyFileForDesktop
+                        : _uploadKeyFile,
+                child: Text(
+                  'Upload backup key file',
+                  style: TextStyle(fontSize: 16.toFont),
                 ),
-              )
-            : const SizedBox()
-      ]);
-    });
+                isLoading: loading,
+              ),
+              const Text(
+                'Upload your backup key file from stored location which was generated during the pairing process of your @sign.',
+                style: TextStyle(fontSize: AtOnboardingDimens.fontSmall),
+              ),
+              SizedBox(height: 20.toHeight),
+              const Text(
+                'Need an @sign?',
+                style: TextStyle(fontSize: AtOnboardingDimens.fontNormal),
+              ),
+              SizedBox(height: 5.toHeight),
+              AtOnboardingPrimaryButton(
+                onPressed: () async {
+                  _showGenerateScreen(context: context);
+                },
+                child: const Text(
+                  'Generate Free @sign',
+                  style: TextStyle(fontSize: AtOnboardingDimens.fontLarge),
+                ),
+              ),
+              SizedBox(height: 20.toHeight),
+              if (!widget.hideQrScan)
+                const Text(
+                  'Have a QR Code?',
+                  style: TextStyle(fontSize: AtOnboardingDimens.fontNormal),
+                ),
+              if (!widget.hideQrScan) SizedBox(height: 5.toHeight),
+              if (!widget.hideQrScan)
+                (Platform.isAndroid || Platform.isIOS)
+                    ? AtOnboardingPrimaryButton(
+                        onPressed: () async {
+                          ///TODO
+                        },
+                        child: const Text(
+                          'Scan QR code',
+                          style:
+                              TextStyle(fontSize: AtOnboardingDimens.fontLarge),
+                        ),
+                      )
+                    : AtOnboardingPrimaryButton(
+                        onPressed: () async {},
+                        child: Text(
+                          'Upload QR code',
+                          style: TextStyle(
+                              color: Colors.white, fontSize: 15.toFont),
+                        ),
+                      ),
+            ],
+          ),
+        ),
+        actions: <Widget>[
+          AtOnboardingSecondaryButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text(
+              Strings.closeTitle,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showGenerateScreen({
@@ -677,10 +573,10 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
   }
 
   Future<void> _showAlertDialog(dynamic errorMessage,
-      {bool? isPkam,
-        String? title,
-        bool? getClose,
-        Function? onClose}) async =>
+          {bool? isPkam,
+          String? title,
+          bool? getClose,
+          Function? onClose}) async =>
       showDialog(
           barrierDismissible: false,
           context: context,

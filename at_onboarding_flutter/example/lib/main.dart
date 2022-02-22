@@ -126,7 +126,7 @@ class _MyAppState extends State<MyApp> {
                         setState(() {
                           atClientPreference = preference;
                         });
-                        AtOnboarding.start(
+                        await AtOnboarding.onboard(
                           context: context,
                           config: AtOnboardingConfig(
                             context: context,
@@ -143,7 +143,34 @@ class _MyAppState extends State<MyApp> {
                             },
                             nextScreen: const HomeScreen(),
                           ),
+                          onSuccess: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const HomeScreen()));
+                          },
+                          onError: () {
+                            //Do nothing
+                          },
                         );
+                        // AtOnboarding.start(
+                        //   context: context,
+                        //   config: AtOnboardingConfig(
+                        //     context: context,
+                        //     atClientPreference: atClientPreference!,
+                        //     domain: AtEnv.rootDomain,
+                        //     rootEnvironment: AtEnv.rootEnvironment,
+                        //     appAPIKey: AtEnv.appApiKey,
+                        //     appColor: Theme.of(context).primaryColor,
+                        //     onboard: (value, atsign) {
+                        //       _logger.finer('Successfully onboarded $atsign');
+                        //     },
+                        //     onError: (error) {
+                        //       _logger.severe('Onboarding throws $error error');
+                        //     },
+                        //     nextScreen: const HomeScreen(),
+                        //   ),
+                        // );
                       },
                       child: const Text('Onboard an @sign - 2'),
                     ),

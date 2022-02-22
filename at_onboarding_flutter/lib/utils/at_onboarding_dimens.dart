@@ -1,7 +1,7 @@
 class AtOnboardingDimens {
   AtOnboardingDimens._();
 
-  static const double dialogBorderRadius = 20;
+  static const double dialogBorderRadius = 10;
   static const double borderRadius = 10;
 
   static const double fontLarge = 16;
