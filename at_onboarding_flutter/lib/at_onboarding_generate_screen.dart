@@ -8,7 +8,6 @@ import 'package:at_onboarding_flutter/utils/color_constants.dart';
 import 'package:at_onboarding_flutter/utils/strings.dart';
 import 'package:at_onboarding_flutter/widgets/at_onboarding_button.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'screens/web_view_screen.dart';
 import 'services/free_atsign_service.dart';
@@ -33,9 +32,7 @@ class _AtOnboardingGenerateScreenState
   final TextEditingController _atsignController = TextEditingController();
   final FreeAtsignService _freeAtsignService = FreeAtsignService();
 
-  bool loading = false;
-
-  bool isGenerating = false;
+  bool _isGenerating = false;
 
   @override
   void initState() {
@@ -54,7 +51,7 @@ class _AtOnboardingGenerateScreenState
         (BuildContext context, void Function(void Function()) stateSet) {
       return Stack(children: <Widget>[
         AbsorbPointer(
-          absorbing: loading,
+          absorbing: _isGenerating,
           child: AlertDialog(
             title: Text(
               'Setting up your account',
@@ -68,41 +65,19 @@ class _AtOnboardingGenerateScreenState
               children: [
                 TextFormField(
                   enabled: false,
-                  // style: Theme.of(context).brightness == Brightness.dark
-                  //     ? CustomTextStyles.fontR14secondary
-                  //     : CustomTextStyles.fontR14primary,
                   validator: (String? value) {
                     if (value == null || value == '') {
                       return '@sign cannot be empty';
                     }
                     return null;
                   },
-                  onChanged: (String value) {
-                    stateSet(() {});
-                  },
                   controller: _atsignController,
-                  inputFormatters: <TextInputFormatter>[
-                    LengthLimitingTextInputFormatter(80),
-                    // This inputFormatter function will convert all the input to lowercase.
-                    TextInputFormatter.withFunction(
-                        (TextEditingValue oldValue, TextEditingValue newValue) {
-                      return newValue.copyWith(
-                        text: newValue.text.toLowerCase(),
-                        selection: newValue.selection,
-                      );
-                    })
-                  ],
-                  textCapitalization: TextCapitalization.none,
                   decoration: InputDecoration(
-                    fillColor: Colors.blueAccent,
-                    errorStyle: TextStyle(
-                      fontSize: 12.toFont,
-                    ),
                     hintText: Strings.atsignHintText,
-                    prefixText: '@',
-                    prefixStyle: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                        fontSize: 15.toFont),
+                    prefix: Text(
+                      '@',
+                      style: TextStyle(color: Theme.of(context).primaryColor),
+                    ),
                     border: OutlineInputBorder(
                       borderSide: BorderSide(
                         color: ColorConstants.appColor,
@@ -134,13 +109,9 @@ class _AtOnboardingGenerateScreenState
                   height: SizeConfig().isTablet(context) ? 50.toHeight : null,
                   child: AtOnboardingSecondaryButton(
                     onPressed: () async {
-                      loading = true;
-                      stateSet(() {});
-                      _atsignController.text = await _getFreeAtsign() ?? '';
-                      loading = false;
-                      stateSet(() {});
+                      _getFreeAtsign();
                     },
-                    isLoading: isGenerating,
+                    isLoading: _isGenerating,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
@@ -192,9 +163,9 @@ class _AtOnboardingGenerateScreenState
     });
   }
 
-  Future<String?> _getFreeAtsign() async {
+  void _getFreeAtsign() async {
     setState(() {
-      isGenerating = true;
+      _isGenerating = true;
     });
     dynamic data;
     String? atsign;
@@ -210,9 +181,11 @@ class _AtOnboardingGenerateScreenState
       await showErrorDialog(errorMessage);
     }
     setState(() {
-      isGenerating = false;
+      _isGenerating = false;
     });
-    return atsign;
+    if ((atsign ?? '').isNotEmpty) {
+      _atsignController.text = atsign ?? '';
+    }
   }
 
   Future<CustomDialog?> showErrorDialog(String? errorMessage) async {

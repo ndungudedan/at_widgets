@@ -45,6 +45,7 @@ class _AtOnboardingOTPScreenState extends State<AtOnboardingOTPScreen> {
   final FreeAtsignService _freeAtsignService = FreeAtsignService();
 
   bool isVerifing = false;
+  bool isResendingCode = false;
 
   String limitExceeded = 'limitExceeded';
 
@@ -107,9 +108,8 @@ class _AtOnboardingOTPScreenState extends State<AtOnboardingOTPScreen> {
                 ),
                 Text(
                   'A verification code has been sent to ${widget.email}',
-                  style: Theme.of(context).brightness == Brightness.dark
-                      ? CustomTextStyles.fontR14secondary
-                      : CustomTextStyles.fontR14primary,
+                  style:
+                      const TextStyle(fontSize: AtOnboardingDimens.fontNormal),
                 ),
                 PinCodeTextField(
                   controller: _pinCodeController,
@@ -155,18 +155,18 @@ class _AtOnboardingOTPScreenState extends State<AtOnboardingOTPScreen> {
                     )
                   ],
                 ),
-                SizedBox(
-                    width: MediaQuery.of(context).size.width,
-                    height: SizeConfig().isTablet(context) ? 50.toHeight : null,
-                    child: ElevatedButton(
-                      onPressed: _onVerifyPressed,
-                      child: Center(
-                          child: Text(
-                        'Verify & Login',
-                        style:
-                            TextStyle(color: Colors.white, fontSize: 15.toFont),
-                      )),
-                    )),
+                AtOnboardingPrimaryButton(
+                  width: double.infinity,
+                  isLoading: isVerifing,
+                  onPressed: _onVerifyPressed,
+                  child: const Text('Verify & Login'),
+                ),
+                AtOnboardingSecondaryButton(
+                  width: double.infinity,
+                  isLoading: isResendingCode,
+                  onPressed: _onResendPressed,
+                  child: const Text('Resend Code'),
+                ),
               ],
             ),
             actions: <Widget>[
@@ -215,7 +215,7 @@ class _AtOnboardingOTPScreenState extends State<AtOnboardingOTPScreen> {
   }
 
   void _onVerifyPressed() async {
-    isVerifing = false;
+    isVerifing = true;
     setState(() {});
 
     String? result = await validatePerson(
@@ -232,6 +232,37 @@ class _AtOnboardingOTPScreenState extends State<AtOnboardingOTPScreen> {
       //     params[1],
       //     false);
     }
+  }
+
+  void _onResendPressed() async {
+    setState(() {
+      isResendingCode = true;
+    });
+    // String atsign;
+    dynamic response =
+        await _freeAtsignService.registerPerson(widget.atSign, widget.email);
+    if (response.statusCode == 200) {
+      //Success
+      final data = jsonDecode(response.body);
+      _pinCodeController.text = '';
+      // status = true;
+      // atsign = data['data']['atsign'];
+    } else {
+      //Error
+      final data = jsonDecode(response.body);
+      String errorMessage = data['message'];
+      // if (errorMessage.contains('Invalid Email')) {
+      //   oldEmail = email;
+      // }
+      if (errorMessage.contains('maximum number of free @signs')) {
+        await showlimitDialog(context);
+      } else {
+        await showErrorDialog(context, errorMessage);
+      }
+    }
+    setState(() {
+      isResendingCode = false;
+    });
   }
 
   Future<String?> validatePerson(
