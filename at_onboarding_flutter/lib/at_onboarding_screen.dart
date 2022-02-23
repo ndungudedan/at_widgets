@@ -55,7 +55,7 @@ class AtOnboardingScreen extends StatefulWidget {
 }
 
 class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
-  final AtSignLogger _logger = AtSignLogger('QR Scan');
+  final AtSignLogger _logger = AtSignLogger('At Onboarding');
   final OnboardingService _onboardingService = OnboardingService.getInstance();
 
   final bool scanQR = false;
@@ -83,6 +83,12 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
   void initState() {
     checkPermissions();
     super.initState();
+    initData();
+  }
+
+  void initData() {
+    _onboardingService.onboardFunc = widget.config.onboard;
+    _onboardingService.setNextScreen = widget.config.nextScreen;
   }
 
   Future<void> checkPermissions() async {
@@ -334,7 +340,7 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
           jsonData: contents, decryptKey: aesKey);
       if (authResponse == ResponseStatus.authSuccess) {
         if (_onboardingService.nextScreen == null) {
-          Navigator.pop(context);
+          // Navigator.pop(context);
           _onboardingService.onboardFunc(_onboardingService.atClientServiceMap,
               _onboardingService.currentAtsign);
         } else {
