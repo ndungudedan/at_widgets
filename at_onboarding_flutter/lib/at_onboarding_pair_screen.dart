@@ -14,6 +14,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'at_onboarding_otp_screen.dart';
 import 'screens/web_view_screen.dart';
 import 'services/free_atsign_service.dart';
+import 'widgets/at_onboarding_dialog.dart';
 import 'widgets/custom_dialog.dart';
 
 class AtOnboardingPairScreen extends StatefulWidget {
@@ -177,21 +178,21 @@ class _AtOnboardingPairScreenState extends State<AtOnboardingPairScreen> {
     });
   }
 
-  Future<CustomDialog?> showErrorDialog(
-      BuildContext context, String? errorMessage) async {
-    return showDialog<CustomDialog>(
-        barrierDismissible: false,
-        context: context,
-        builder: (BuildContext context) {
-          return CustomDialog(
-            context: context,
-            isErrorDialog: true,
-            showClose: true,
-            message: errorMessage,
-            onClose: () {},
-          );
-        });
-  }
+  // Future<CustomDialog?> showErrorDialog(
+  //     BuildContext context, String? errorMessage) async {
+  //   return showDialog<CustomDialog>(
+  //       barrierDismissible: false,
+  //       context: context,
+  //       builder: (BuildContext context) {
+  //         return CustomDialog(
+  //           context: context,
+  //           isErrorDialog: true,
+  //           showClose: true,
+  //           message: errorMessage,
+  //           onClose: () {},
+  //         );
+  //       });
+  // }
 
   void _showReferenceWebview() {
     Navigator.push(
@@ -249,7 +250,8 @@ class _AtOnboardingPairScreenState extends State<AtOnboardingPairScreen> {
       if (errorMessage.contains('maximum number of free @signs')) {
         await showlimitDialog(context);
       } else {
-        await showErrorDialog(context, errorMessage);
+        // await showErrorDialog(context, errorMessage);
+        AtOnboardingDialog.showError(context: context, message: errorMessage);
       }
     }
     return status;

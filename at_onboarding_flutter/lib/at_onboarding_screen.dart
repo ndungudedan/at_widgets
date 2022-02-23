@@ -513,14 +513,17 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
     );
   }
 
-
   void _showQRCodeScreen({
     required BuildContext context,
   }) async {
     await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AtOnboardingQRCodeScreen(),
+      builder: (_) => AtOnboardingQRCodeScreen(
+        onScanSuccess: ({required String atSign, required String secret}) {
+          _processSharedSecret(atSign, secret);
+        },
+      ),
     );
   }
 

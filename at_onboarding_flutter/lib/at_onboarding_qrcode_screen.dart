@@ -10,7 +10,13 @@ import 'package:flutter_qr_reader/flutter_qr_reader.dart';
 import 'utils/at_onboarding_dimens.dart';
 
 class AtOnboardingQRCodeScreen extends StatefulWidget {
-  const AtOnboardingQRCodeScreen({Key? key}) : super(key: key);
+  final Function({required String atSign, required String secret})?
+      onScanSuccess;
+
+  const AtOnboardingQRCodeScreen({
+    Key? key,
+    this.onScanSuccess,
+  }) : super(key: key);
 
   @override
   _AtOnboardingQRCodeScreenState createState() =>
@@ -18,7 +24,7 @@ class AtOnboardingQRCodeScreen extends StatefulWidget {
 }
 
 class _AtOnboardingQRCodeScreenState extends State<AtOnboardingQRCodeScreen> {
-  late QrReaderViewController _controller;
+  QrReaderViewController? _controller;
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +57,7 @@ class _AtOnboardingQRCodeScreenState extends State<AtOnboardingQRCodeScreen> {
                     callback: (QrReaderViewController controller) {
                       _controller = controller;
                       _controller
-                          .startCamera((String data, List<Offset> offsets) {
+                          ?.startCamera((String data, List<Offset> offsets) {
                         onScan(data, offsets, context);
                       });
                     },
@@ -67,7 +73,7 @@ class _AtOnboardingQRCodeScreenState extends State<AtOnboardingQRCodeScreen> {
                   // widget.onClose!();
                 },
                 child: const Text(
-                  Strings.closeTitle,
+                  Strings.cancelButton,
                   style: TextStyle(
                     fontSize: AtOnboardingDimens.fontNormal,
                   ),
@@ -82,35 +88,21 @@ class _AtOnboardingQRCodeScreenState extends State<AtOnboardingQRCodeScreen> {
 
   Future<void> onScan(
       String data, List<Offset> offsets, BuildContext context) async {
-    await _controller.stopCamera();
-    dynamic message;
-    // if (_isCram(data)) {
-    //   List<String> params = data.split(':');
-    //   if (params[1].length < 128) {
-    //     await _showAlertDialog(CustomStrings().invalidCram(params[0]));
-    //   } else if (OnboardingService.getInstance().formatAtSign(params[0]) !=
-    //       _pairingAtsign &&
-    //       _pairingAtsign != null) {
-    //     await _showAlertDialog(CustomStrings().atsignMismatch(_pairingAtsign));
-    //   } else if (params[1].length == 128) {
-    //     message = await _processSharedSecret(params[0], params[1]);
-    //   } else {
-    //     await _showAlertDialog(CustomStrings().invalidData);
-    //   }
-    // } else {
-    //   await _showAlertDialog(CustomStrings().invalidData);
-    // }
-    // setState(() {
-    //   loading = false;
-    // });
-    // if (message != ResponseStatus.authSuccess) {
-    //   scanCompleted = false;
-    //   await _controller.startCamera((String data, List<Offset> offsets) {
-    //     if (!scanCompleted) {
-    //       onScan(data, offsets, context);
-    //       scanCompleted = true;
-    //     }
-    //   });
-    // }
+    try {
+      //Relate: https://github.com/atsign-foundation/at_widgets/issues/353
+      //If added [await] will make an error because [stopCamera] invoke a channel method which don't have a return and waiting forever.
+      //It's an issue in flutter_qr_reader package and no need [await] keyword
+      _controller!.stopCamera();
+      List<String> values = data.split(':');
+      Navigator.pop(context);
+      await widget.onScanSuccess?.call(atSign: values[0], secret: values[1]);
+
+      // try again
+      await _controller!.startCamera((String data, List<Offset> offsets) {
+        onScan(data, offsets, context);
+      });
+    } catch (e) {
+      print(e);
+    }
   }
 }

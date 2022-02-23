@@ -12,19 +12,19 @@ enum AtOnboardingResult {
   notFound, //Done have
 }
 
-class AtOnboardingInitScreen extends StatefulWidget {
+class AtOnboardingStartScreen extends StatefulWidget {
   final AtOnboardingConfig config;
 
-  const AtOnboardingInitScreen({
+  const AtOnboardingStartScreen({
     Key? key,
     required this.config,
   }) : super(key: key);
 
   @override
-  _AtOnboardingInitScreenState createState() => _AtOnboardingInitScreenState();
+  _AtOnboardingStartScreenState createState() => _AtOnboardingStartScreenState();
 }
 
-class _AtOnboardingInitScreenState extends State<AtOnboardingInitScreen> {
+class _AtOnboardingStartScreenState extends State<AtOnboardingStartScreen> {
   @override
   void initState() {
     super.initState();
