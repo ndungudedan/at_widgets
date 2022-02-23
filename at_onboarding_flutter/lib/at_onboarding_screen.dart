@@ -6,6 +6,7 @@ import 'package:at_backupkey_flutter/utils/color_constants.dart';
 import 'package:at_client_mobile/at_client_mobile.dart';
 import 'package:at_onboarding_flutter/at_onboarding_config.dart';
 import 'package:at_onboarding_flutter/at_onboarding_generate_screen.dart';
+import 'package:at_onboarding_flutter/at_onboarding_qrcode_screen.dart';
 import 'package:at_onboarding_flutter/services/onboarding_service.dart';
 import 'package:at_onboarding_flutter/services/size_config.dart';
 import 'package:at_onboarding_flutter/utils/at_onboarding_dimens.dart';
@@ -83,12 +84,6 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
   void initState() {
     checkPermissions();
     super.initState();
-    initData();
-  }
-
-  void initData() {
-    _onboardingService.onboardFunc = widget.config.onboard;
-    _onboardingService.setNextScreen = widget.config.nextScreen;
   }
 
   Future<void> checkPermissions() async {
@@ -340,7 +335,7 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
           jsonData: contents, decryptKey: aesKey);
       if (authResponse == ResponseStatus.authSuccess) {
         if (_onboardingService.nextScreen == null) {
-          // Navigator.pop(context);
+          Navigator.pop(context);
           _onboardingService.onboardFunc(_onboardingService.atClientServiceMap,
               _onboardingService.currentAtsign);
         } else {
@@ -471,7 +466,7 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
                 (Platform.isAndroid || Platform.isIOS)
                     ? AtOnboardingPrimaryButton(
                         onPressed: () async {
-                          ///TODO
+                          _showQRCodeScreen(context: context);
                         },
                         child: const Text(
                           'Scan QR code',
@@ -515,6 +510,17 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
           _processSharedSecret(atSign, secret);
         },
       ),
+    );
+  }
+
+
+  void _showQRCodeScreen({
+    required BuildContext context,
+  }) async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AtOnboardingQRCodeScreen(),
     );
   }
 
