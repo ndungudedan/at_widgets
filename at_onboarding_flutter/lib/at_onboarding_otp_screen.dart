@@ -13,6 +13,7 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'at_onboarding_accounts_screen.dart';
+import 'at_onboarding_reference_screen.dart';
 import 'screens/web_view_screen.dart';
 import 'services/free_atsign_service.dart';
 import 'utils/custom_textstyles.dart';
@@ -174,13 +175,11 @@ class _AtOnboardingOTPScreenState extends State<AtOnboardingOTPScreen> {
   }
 
   void _showReferenceWebview() {
-    Navigator.push(
-        context,
-        MaterialPageRoute<Widget>(
-            builder: (BuildContext context) => const WebViewScreen(
-                  title: Strings.faqTitle,
-                  url: Strings.faqUrl,
-                )));
+    AtOnboardingReferenceScreen.push(
+      context: context,
+      title: Strings.faqTitle,
+      url: Strings.faqUrl,
+    );
   }
 
   void _onVerifyPressed() async {
@@ -269,7 +268,8 @@ class _AtOnboardingOTPScreenState extends State<AtOnboardingOTPScreen> {
             otp: otp,
           );
           if (value == responseData['newAtsign']) {
-            cramSecret = await validatePerson(value as String, email, otp, context,
+            cramSecret = await validatePerson(
+                value as String, email, otp, context,
                 isConfirmation: true);
             return cramSecret;
           } else {

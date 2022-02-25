@@ -37,6 +37,7 @@ class AtOnboardingPairScreen extends StatefulWidget {
 
 class _AtOnboardingPairScreenState extends State<AtOnboardingPairScreen> {
   final TextEditingController _emailController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   final FreeAtsignService _freeAtsignService = FreeAtsignService();
 
   bool isParing = false;
@@ -44,6 +45,7 @@ class _AtOnboardingPairScreenState extends State<AtOnboardingPairScreen> {
   @override
   void initState() {
     super.initState();
+    _focusNode.unfocus();
   }
 
   @override
@@ -89,9 +91,7 @@ class _AtOnboardingPairScreenState extends State<AtOnboardingPairScreen> {
                 ),
                 TextFormField(
                   enabled: true,
-                  // style: Theme.of(context).brightness == Brightness.dark
-                  //     ? CustomTextStyles.fontR14secondary
-                  //     : CustomTextStyles.fontR14primary,
+                  focusNode: _focusNode,
                   validator: (String? value) {
                     if (value == null || value == '') {
                       return '@sign cannot be empty';
@@ -204,6 +204,7 @@ class _AtOnboardingPairScreenState extends State<AtOnboardingPairScreen> {
   }
 
   void _onSendCodePressed() async {
+    _focusNode.unfocus();
     if (_emailController.text != '') {
       isParing = true;
       setState(() {});

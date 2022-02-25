@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:at_onboarding_flutter/at_onboarding_pair_screen.dart';
+import 'package:at_onboarding_flutter/at_onboarding_reference_screen.dart';
 import 'package:at_onboarding_flutter/services/size_config.dart';
 import 'package:at_onboarding_flutter/utils/at_onboarding_dimens.dart';
 import 'package:at_onboarding_flutter/utils/color_constants.dart';
@@ -208,13 +209,11 @@ class _AtOnboardingGenerateScreenState
   }
 
   void _showReferenceWebview() {
-    Navigator.push(
-        context,
-        MaterialPageRoute<Widget>(
-            builder: (BuildContext context) => const WebViewScreen(
-                  title: Strings.faqTitle,
-                  url: Strings.faqUrl,
-                )));
+    AtOnboardingReferenceScreen.push(
+      context: context,
+      title: Strings.faqTitle,
+      url: Strings.faqUrl,
+    );
   }
 
   void _showPairScreen() async {

@@ -2,19 +2,15 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
-import 'package:at_backupkey_flutter/utils/color_constants.dart';
 import 'package:at_client_mobile/at_client_mobile.dart';
 import 'package:at_onboarding_flutter/at_onboarding_config.dart';
 import 'package:at_onboarding_flutter/at_onboarding_generate_screen.dart';
 import 'package:at_onboarding_flutter/at_onboarding_qrcode_screen.dart';
-import 'package:at_onboarding_flutter/at_onboarding_start_screen.dart';
 import 'package:at_onboarding_flutter/services/onboarding_service.dart';
 import 'package:at_onboarding_flutter/services/size_config.dart';
 import 'package:at_onboarding_flutter/utils/at_onboarding_dimens.dart';
-import 'package:at_onboarding_flutter/utils/custom_textstyles.dart';
 import 'package:at_onboarding_flutter/utils/response_status.dart';
 import 'package:at_onboarding_flutter/utils/strings.dart';
-import 'package:at_onboarding_flutter/widgets/custom_button.dart';
 import 'package:at_onboarding_flutter/widgets/custom_dialog.dart';
 import 'package:at_onboarding_flutter/widgets/custom_strings.dart';
 import 'package:at_utils/at_logger.dart';
@@ -26,6 +22,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 
 import 'at_onboarding.dart';
+import 'at_onboarding_reference_screen.dart';
 import 'screens/private_key_qrcode_generator.dart';
 import 'widgets/at_onboarding_button.dart';
 
@@ -413,6 +410,12 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
             },
           ),
           centerTitle: true,
+          actions: [
+            IconButton(
+              onPressed: _showReferenceWebview,
+              icon: const Icon(Icons.help),
+            ),
+          ],
         ),
         body: Center(
           child: Container(
@@ -684,4 +687,12 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
                 title: title,
                 onClose: getClose == true ? onClose : () {});
           });
+
+  void _showReferenceWebview() {
+    AtOnboardingReferenceScreen.push(
+      context: context,
+      title: Strings.faqTitle,
+      url: Strings.faqUrl,
+    );
+  }
 }
