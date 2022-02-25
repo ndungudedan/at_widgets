@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:at_onboarding_flutter/services/size_config.dart';
 import 'package:at_onboarding_flutter/utils/at_onboarding_dimens.dart';
@@ -15,7 +14,6 @@ import 'at_onboarding_otp_screen.dart';
 import 'screens/web_view_screen.dart';
 import 'services/free_atsign_service.dart';
 import 'widgets/at_onboarding_dialog.dart';
-import 'widgets/custom_dialog.dart';
 
 class AtOnboardingPairScreen extends StatefulWidget {
   final String atSign;
@@ -50,43 +48,44 @@ class _AtOnboardingPairScreenState extends State<AtOnboardingPairScreen> {
 
   @override
   Widget build(BuildContext context) {
-    double _dialogWidth = double.maxFinite;
-    if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
-      _dialogWidth = 400;
-    }
-
-    return StatefulBuilder(builder:
-        (BuildContext context, void Function(void Function()) stateSet) {
-      return Stack(children: <Widget>[
-        AbsorbPointer(
-          absorbing: isParing,
-          child: AlertDialog(
-            title: Text(
-              'Setting up your account',
-              style: TextStyle(
-                color: Theme.of(context).primaryColor,
-                fontSize: AtOnboardingDimens.fontLarge.toFont,
-              ),
+    return AbsorbPointer(
+      absorbing: isParing,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Setting up your account'),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              onPressed: _showReferenceWebview,
+              icon: const Icon(Icons.help),
             ),
-            content: Column(
+          ],
+        ),
+        body: Center(
+          child: Container(
+            decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                borderRadius:
+                    BorderRadius.circular(AtOnboardingDimens.borderRadius)),
+            padding: const EdgeInsets.all(AtOnboardingDimens.paddingNormal),
+            margin: const EdgeInsets.all(AtOnboardingDimens.paddingNormal),
+            constraints: const BoxConstraints(
+              maxWidth: 400,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    const Flexible(
-                      child: Text('Enter your email',
-                          style: TextStyle(
-                              fontSize: AtOnboardingDimens.fontNormal)),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.help,
-                        size: 18.toFont,
-                      ),
-                      onPressed: _showReferenceWebview,
-                    )
-                  ],
+                const Text(
+                  'Enter your email',
+                  style: TextStyle(
+                    fontSize: AtOnboardingDimens.fontLarge,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(
+                  height: 5.toHeight,
                 ),
                 TextFormField(
                   enabled: true,
@@ -98,9 +97,6 @@ class _AtOnboardingPairScreenState extends State<AtOnboardingPairScreen> {
                       return '@sign cannot be empty';
                     }
                     return null;
-                  },
-                  onChanged: (String value) {
-                    stateSet(() {});
                   },
                   controller: _emailController,
                   inputFormatters: <TextInputFormatter>[
@@ -141,41 +137,44 @@ class _AtOnboardingPairScreenState extends State<AtOnboardingPairScreen> {
                       fontSize: 13.toFont, fontWeight: FontWeight.w600),
                 ),
                 SizedBox(
-                  height: 10.toHeight,
+                  height: 20.toHeight,
                 ),
-                SizedBox(
-                  width: MediaQuery.of(context).size.width,
-                  child: AtOnboardingPrimaryButton(
-                    isLoading: isParing,
-                    onPressed: _onSendCodePressed,
-                    child: Center(
-                      child: Text(
+                AtOnboardingPrimaryButton(
+                  height: 48,
+                  borderRadius: 24,
+                  isLoading: isParing,
+                  onPressed: _onSendCodePressed,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Text(
                         'Send Code',
                         style:
-                            TextStyle(color: Colors.white, fontSize: 15.toFont),
+                            TextStyle(fontSize: AtOnboardingDimens.fontLarge),
                       ),
-                    ),
+                      Icon(Icons.arrow_right_alt_rounded)
+                    ],
                   ),
                 ),
               ],
             ),
-            actions: <Widget>[
-              AtOnboardingSecondaryButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text(
-                  Strings.cancelButton,
-                  style: TextStyle(
-                    fontSize: AtOnboardingDimens.fontNormal,
-                  ),
-                ),
-              ),
-            ],
           ),
         ),
-      ]);
-    });
+        // actions: <Widget>[
+        //   AtOnboardingSecondaryButton(
+        //     onPressed: () {
+        //       Navigator.pop(context);
+        //     },
+        //     child: const Text(
+        //       Strings.cancelButton,
+        //       style: TextStyle(
+        //         fontSize: AtOnboardingDimens.fontNormal,
+        //       ),
+        //     ),
+        //   ),
+        // ],
+      ),
+    );
   }
 
   // Future<CustomDialog?> showErrorDialog(
@@ -314,17 +313,19 @@ class _AtOnboardingPairScreenState extends State<AtOnboardingPairScreen> {
   void _showOTPScreen() async {
     final String atSign = widget.atSign;
     final String email = _emailController.text;
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AtOnboardingOTPScreen(
-        atSign: atSign,
-        hideReferences: false,
-        email: email,
-        onGenerateSuccess: ({required String atSign, required String secret}) {
-          Navigator.pop(context);
-          widget.onGenerateSuccess?.call(atSign: atSign, secret: secret);
-        },
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AtOnboardingOTPScreen(
+          atSign: atSign,
+          hideReferences: false,
+          email: email,
+          onGenerateSuccess: (
+              {required String atSign, required String secret}) {
+            Navigator.pop(context);
+            widget.onGenerateSuccess?.call(atSign: atSign, secret: secret);
+          },
+        ),
       ),
     );
   }

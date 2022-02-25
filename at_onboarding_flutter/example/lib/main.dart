@@ -126,7 +126,7 @@ class _MyAppState extends State<MyApp> {
                         setState(() {
                           atClientPreference = preference;
                         });
-                        await AtOnboarding.onboard(
+                        final result = await AtOnboarding.onboard(
                           context: context,
                           config: AtOnboardingConfig(
                             context: context,
@@ -143,16 +143,30 @@ class _MyAppState extends State<MyApp> {
                             },
                             nextScreen: const HomeScreen(),
                           ),
-                          onSuccess: () {
+                          // onSuccess: () {
+                          //
+                          // },
+                          // onError: () {
+                          //   //Do nothing
+                          // },
+                        );
+                        switch (result) {
+                          case AtOnboardingResult.success:
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                     builder: (_) => const HomeScreen()));
-                          },
-                          onError: () {
-                            //Do nothing
-                          },
-                        );
+                            break;
+                          case AtOnboardingResult.error:
+                            // TODO: Handle this case.
+                            break;
+                          case AtOnboardingResult.notFound:
+                            // TODO: Handle this case.
+                            break;
+                          case AtOnboardingResult.cancel:
+                            // TODO: Handle this case.
+                            break;
+                        }
                         // AtOnboarding.start(
                         //   context: context,
                         //   config: AtOnboardingConfig(

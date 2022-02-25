@@ -2,13 +2,13 @@ import 'package:at_onboarding_flutter/widgets/at_onboarding_button.dart';
 import 'package:flutter/material.dart';
 
 class AtOnboardingDialog extends StatefulWidget {
-  static void showError({
+  static Future showError({
     required BuildContext context,
     String? title,
     required String message,
     VoidCallback? onCancel,
-  }) {
-    showDialog(
+  }) async {
+    return showDialog(
         barrierDismissible: false,
         context: context,
         builder: (BuildContext context) {

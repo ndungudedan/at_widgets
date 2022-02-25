@@ -4,13 +4,8 @@ import 'package:at_onboarding_flutter/utils/at_onboarding_dimens.dart';
 import 'package:at_sync_ui_flutter/at_sync_material.dart';
 import 'package:flutter/material.dart';
 
+import 'at_onboarding.dart';
 import 'at_onboarding_config.dart';
-
-enum AtOnboardingResult {
-  success, //Authenticate success
-  error, //Authenticate error
-  notFound, //Done have
-}
 
 class AtOnboardingStartScreen extends StatefulWidget {
   final AtOnboardingConfig config;
@@ -21,7 +16,8 @@ class AtOnboardingStartScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _AtOnboardingStartScreenState createState() => _AtOnboardingStartScreenState();
+  _AtOnboardingStartScreenState createState() =>
+      _AtOnboardingStartScreenState();
 }
 
 class _AtOnboardingStartScreenState extends State<AtOnboardingStartScreen> {

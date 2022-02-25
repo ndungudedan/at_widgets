@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:at_onboarding_flutter/at_onboarding_pair_screen.dart';
 import 'package:at_onboarding_flutter/services/size_config.dart';
@@ -42,27 +41,42 @@ class _AtOnboardingGenerateScreenState
 
   @override
   Widget build(BuildContext context) {
-    double _dialogWidth = double.maxFinite;
-    if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
-      _dialogWidth = 400;
-    }
-
-    return StatefulBuilder(builder:
-        (BuildContext context, void Function(void Function()) stateSet) {
-      return Stack(children: <Widget>[
-        AbsorbPointer(
-          absorbing: _isGenerating,
-          child: AlertDialog(
-            title: Text(
-              'Setting up your account',
-              style: TextStyle(
-                color: Theme.of(context).primaryColor,
-                fontSize: AtOnboardingDimens.fontLarge.toFont,
-              ),
+    return AbsorbPointer(
+      absorbing: _isGenerating,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Setting up your account'),
+          actions: [
+            IconButton(
+              onPressed: _showReferenceWebview,
+              icon: const Icon(Icons.help),
             ),
-            content: Column(
+          ],
+        ),
+        body: Center(
+          child: Container(
+            decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                borderRadius:
+                    BorderRadius.circular(AtOnboardingDimens.borderRadius)),
+            padding: const EdgeInsets.all(AtOnboardingDimens.paddingNormal),
+            margin: const EdgeInsets.all(AtOnboardingDimens.paddingNormal),
+            constraints: const BoxConstraints(
+              maxWidth: 400,
+            ),
+            child: Column(
               mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const Text(
+                  'Free @sign',
+                  style: TextStyle(
+                    fontSize: AtOnboardingDimens.fontLarge,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 5.toHeight),
                 TextFormField(
                   enabled: false,
                   validator: (String? value) {
@@ -87,80 +101,70 @@ class _AtOnboardingGenerateScreenState
                         horizontal: AtOnboardingDimens.paddingSmall.toWidth),
                   ),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    const Flexible(
-                      child: Text('Free @sign',
-                          style: TextStyle(
-                              fontSize: AtOnboardingDimens.fontNormal)),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.help,
-                        size: 18.toFont,
-                      ),
-                      onPressed: _showReferenceWebview,
-                    )
-                  ],
-                ),
-                SizedBox(
-                  width: MediaQuery.of(context).size.width,
-                  height: SizeConfig().isTablet(context) ? 50.toHeight : null,
-                  child: AtOnboardingSecondaryButton(
-                    onPressed: () async {
-                      _getFreeAtsign();
-                    },
-                    isLoading: _isGenerating,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Center(
-                            child: Text(
-                          'Refresh',
-                          style: TextStyle(fontSize: 15.toFont),
-                        )),
-                        const Icon(
-                          Icons.refresh,
-                          size: 20,
-                        )
-                      ],
-                    ),
+                SizedBox(height: 20.toHeight),
+                SizedBox(height: 20.toHeight),
+                AtOnboardingSecondaryButton(
+                  height: 48,
+                  borderRadius: 24,
+                  onPressed: () async {
+                    _getFreeAtsign();
+                  },
+                  isLoading: _isGenerating,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const <Widget>[
+                      Center(
+                          child: Text(
+                        'Refresh',
+                        style:
+                            TextStyle(fontSize: AtOnboardingDimens.fontLarge),
+                      )),
+                      Icon(
+                        Icons.refresh,
+                        size: 20,
+                      )
+                    ],
                   ),
                 ),
-                SizedBox(
-                    width: MediaQuery.of(context).size.width,
-                    height: SizeConfig().isTablet(context) ? 50.toHeight : null,
-                    child: AtOnboardingPrimaryButton(
-                      onPressed: _showPairScreen,
-                      child: const Text(
+                SizedBox(height: 20.toHeight),
+                AtOnboardingPrimaryButton(
+                  height: 48,
+                  borderRadius: 24,
+                  onPressed: _showPairScreen,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Text(
                         'Pair',
                         style: TextStyle(
-                          fontSize: AtOnboardingDimens.fontNormal,
+                          fontSize: AtOnboardingDimens.fontLarge,
                         ),
                       ),
-                    )),
-              ],
-            ),
-            actions: <Widget>[
-              AtOnboardingSecondaryButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  //Todo
-                  // widget.onClose!();
-                },
-                child: const Text(
-                  Strings.closeTitle,
-                  style: TextStyle(
-                    fontSize: AtOnboardingDimens.fontNormal,
+                      Icon(Icons.arrow_right_alt_rounded)
+                    ],
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ]);
-    });
+        // actions: <Widget>[
+        //   AtOnboardingSecondaryButton(
+        //     onPressed: () {
+        //       Navigator.pop(context);
+        //       //Todo
+        //       // widget.onClose!();
+        //     },
+        //     child: const Text(
+        //       Strings.closeTitle,
+        //       style: TextStyle(
+        //         fontSize: AtOnboardingDimens.fontNormal,
+        //       ),
+        //     ),
+        //   ),
+        // ],
+      ),
+    );
   }
 
   void _getFreeAtsign() async {
@@ -215,16 +219,18 @@ class _AtOnboardingGenerateScreenState
 
   void _showPairScreen() async {
     final String atSign = _atsignController.text;
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AtOnboardingPairScreen(
-        atSign: atSign,
-        hideReferences: false,
-        onGenerateSuccess: ({required String atSign, required String secret}) {
-          Navigator.pop(context);
-          widget.onGenerateSuccess?.call(atSign: atSign, secret: secret);
-        },
+    Navigator.push(
+      context,
+      MaterialPageRoute<Widget>(
+        builder: (BuildContext context) => AtOnboardingPairScreen(
+          atSign: atSign,
+          hideReferences: false,
+          onGenerateSuccess: (
+              {required String atSign, required String secret}) {
+            Navigator.pop(context);
+            widget.onGenerateSuccess?.call(atSign: atSign, secret: secret);
+          },
+        ),
       ),
     );
   }

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:at_onboarding_flutter/screens/atsign_list_screen.dart';
 import 'package:at_onboarding_flutter/services/size_config.dart';
@@ -13,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'at_onboarding_accounts_screen.dart';
 import 'screens/web_view_screen.dart';
 import 'services/free_atsign_service.dart';
 import 'utils/custom_textstyles.dart';
@@ -50,66 +50,50 @@ class _AtOnboardingOTPScreenState extends State<AtOnboardingOTPScreen> {
   String limitExceeded = 'limitExceeded';
 
   @override
-  Widget build(BuildContext context) {
-    double _dialogWidth = double.maxFinite;
-    if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
-      _dialogWidth = 400;
-    }
+  void dispose() {
+    super.dispose();
+    _pinCodeController.dispose();
+  }
 
-    return StatefulBuilder(builder:
-        (BuildContext context, void Function(void Function()) stateSet) {
-      return Stack(children: <Widget>[
-        AbsorbPointer(
-          absorbing: isVerifing,
-          child: AlertDialog(
-            title: Text(
-              'Setting up your account',
-              style: TextStyle(
-                color: Theme.of(context).primaryColor,
-                fontSize: AtOnboardingDimens.fontLarge.toFont,
-              ),
+  @override
+  Widget build(BuildContext context) {
+    return AbsorbPointer(
+      absorbing: isVerifing,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Setting up your account'),
+          actions: [
+            IconButton(
+              onPressed: _showReferenceWebview,
+              icon: const Icon(Icons.help),
             ),
-            content: Column(
+          ],
+        ),
+        body: Center(
+          child: Container(
+            decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                borderRadius:
+                    BorderRadius.circular(AtOnboardingDimens.borderRadius)),
+            padding: const EdgeInsets.all(AtOnboardingDimens.paddingNormal),
+            margin: const EdgeInsets.all(AtOnboardingDimens.paddingNormal),
+            constraints: const BoxConstraints(
+              maxWidth: 400,
+            ),
+            child: Column(
               mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        'Enter Verification Code',
-                        style: SizeConfig().isTablet(context)
-                            ? Theme.of(context).brightness == Brightness.dark
-                                ? CustomTextStyles.fontR12secondary
-                                : CustomTextStyles.fontR12primary
-                            : Theme.of(context).brightness == Brightness.dark
-                                ? CustomTextStyles.fontR14secondary
-                                : CustomTextStyles.fontR14primary,
-                      ),
-                    ),
-                    widget.hideReferences
-                        ? const SizedBox()
-                        : IconButton(
-                            icon: Icon(
-                              Icons.help,
-                              color: ColorConstants.appColor,
-                              size: 18.toFont,
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute<Widget>(
-                                      builder: (BuildContext context) =>
-                                          const WebViewScreen(
-                                            title: Strings.faqTitle,
-                                            url: Strings.faqUrl,
-                                          )));
-                            })
-                  ],
+                const Text(
+                  'Enter Verification Code',
+                  style: TextStyle(
+                    fontSize: AtOnboardingDimens.fontLarge,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                Text(
-                  'A verification code has been sent to ${widget.email}',
-                  style:
-                      const TextStyle(fontSize: AtOnboardingDimens.fontNormal),
+                SizedBox(
+                  height: 5.toHeight,
                 ),
                 PinCodeTextField(
                   controller: _pinCodeController,
@@ -138,30 +122,28 @@ class _AtOnboardingOTPScreenState extends State<AtOnboardingOTPScreen> {
                   ],
                   onChanged: (String value) {},
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    const Flexible(
-                      child: Text('Enter your email',
-                          style: TextStyle(
-                              fontSize: AtOnboardingDimens.fontNormal)),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.help,
-                        size: 18.toFont,
-                      ),
-                      onPressed: _showReferenceWebview,
-                    )
-                  ],
+                Text(
+                  'A verification code has been sent to ${widget.email}',
+                  style:
+                      const TextStyle(fontSize: AtOnboardingDimens.fontNormal),
+                ),
+                SizedBox(
+                  height: 10.toHeight,
                 ),
                 AtOnboardingPrimaryButton(
+                  height: 48,
+                  borderRadius: 24,
                   width: double.infinity,
                   isLoading: isVerifing,
                   onPressed: _onVerifyPressed,
                   child: const Text('Verify & Login'),
                 ),
+                SizedBox(
+                  height: 10.toHeight,
+                ),
                 AtOnboardingSecondaryButton(
+                  height: 48,
+                  borderRadius: 24,
                   width: double.infinity,
                   isLoading: isResendingCode,
                   onPressed: _onResendPressed,
@@ -169,23 +151,10 @@ class _AtOnboardingOTPScreenState extends State<AtOnboardingOTPScreen> {
                 ),
               ],
             ),
-            actions: <Widget>[
-              AtOnboardingSecondaryButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text(
-                  Strings.cancelButton,
-                  style: TextStyle(
-                    fontSize: AtOnboardingDimens.fontNormal,
-                  ),
-                ),
-              ),
-            ],
           ),
         ),
-      ]);
-    });
+      ),
+    );
   }
 
   Future<CustomDialog?> showErrorDialog(
@@ -293,24 +262,22 @@ class _AtOnboardingOTPScreenState extends State<AtOnboardingOTPScreen> {
         }
         //displays list of atsign along with newAtsign
         else {
-          await Navigator.push(
-              context,
-              MaterialPageRoute<dynamic>(
-                  builder: (_) => AtsignListScreen(
-                        atsigns: atsigns,
-                        newAtsign: responseData['newAtsign'],
-                      ))).then((dynamic value) async {
-            if (value == responseData['newAtsign']) {
-              cramSecret = await validatePerson(value, email, otp, context,
-                  isConfirmation: true);
-              return cramSecret;
-            } else {
-              if (value != null) {
-                Navigator.pop(context);
-              }
-              return null;
+          final value = await _openAccountScreen(
+            atsigns: atsigns,
+            newAtsign: responseData['newAtsign'],
+            email: email,
+            otp: otp,
+          );
+          if (value == responseData['newAtsign']) {
+            cramSecret = await validatePerson(value as String, email, otp, context,
+                isConfirmation: true);
+            return cramSecret;
+          } else {
+            if (value != null) {
+              Navigator.pop(context);
             }
-          });
+            return null;
+          }
         }
       } else if (data['status'] != 'error') {
         cramSecret = data['cramkey'];
@@ -409,5 +376,32 @@ class _AtOnboardingOTPScreenState extends State<AtOnboardingOTPScreen> {
             ],
           );
         });
+  }
+
+  Future<String?> _openAccountScreen({
+    required List<String> atsigns,
+    required String? newAtsign,
+    required String email,
+    required String? otp,
+  }) async {
+    await Navigator.push(
+        context,
+        MaterialPageRoute<dynamic>(
+            builder: (_) => AtOnboardingAccountsScreen(
+                  atsigns: atsigns,
+                  newAtsign: newAtsign,
+                ))).then((dynamic value) async {
+      if (value == newAtsign) {
+        final cramSecret = await validatePerson(value, email, otp, context,
+            isConfirmation: true);
+        return cramSecret;
+      } else {
+        if (value != null) {
+          Navigator.pop(context);
+        }
+        return null;
+      }
+    });
+    return null;
   }
 }

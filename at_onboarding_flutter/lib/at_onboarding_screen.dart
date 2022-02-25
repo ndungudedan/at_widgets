@@ -7,6 +7,7 @@ import 'package:at_client_mobile/at_client_mobile.dart';
 import 'package:at_onboarding_flutter/at_onboarding_config.dart';
 import 'package:at_onboarding_flutter/at_onboarding_generate_screen.dart';
 import 'package:at_onboarding_flutter/at_onboarding_qrcode_screen.dart';
+import 'package:at_onboarding_flutter/at_onboarding_start_screen.dart';
 import 'package:at_onboarding_flutter/services/onboarding_service.dart';
 import 'package:at_onboarding_flutter/services/size_config.dart';
 import 'package:at_onboarding_flutter/utils/at_onboarding_dimens.dart';
@@ -24,6 +25,7 @@ import 'package:flutter_qr_reader/flutter_qr_reader.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 
+import 'at_onboarding.dart';
 import 'screens/private_key_qrcode_generator.dart';
 import 'widgets/at_onboarding_button.dart';
 
@@ -39,8 +41,6 @@ class AtOnboardingScreen extends StatefulWidget {
 
   final onboardStatus = OnboardingStatus.ACTIVATE;
 
-  final VoidCallback? onBoardingSuccess;
-
   const AtOnboardingScreen({
     Key? key,
     required this.config,
@@ -48,7 +48,6 @@ class AtOnboardingScreen extends StatefulWidget {
     // this.isQR = false,
     this.hideReferences = false,
     this.hideQrScan = false,
-    this.onBoardingSuccess,
   }) : super(key: key);
 
   @override
@@ -334,20 +333,22 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
       authResponse = await _onboardingService.authenticate(atsign,
           jsonData: contents, decryptKey: aesKey);
       if (authResponse == ResponseStatus.authSuccess) {
-        if (_onboardingService.nextScreen == null) {
-          Navigator.pop(context);
-          _onboardingService.onboardFunc(_onboardingService.atClientServiceMap,
-              _onboardingService.currentAtsign);
-        } else {
-          _onboardingService.onboardFunc(_onboardingService.atClientServiceMap,
-              _onboardingService.currentAtsign);
-          await Navigator.pushReplacement(
-              context,
-              MaterialPageRoute<Widget>(
-                  builder: (BuildContext context) =>
-                      _onboardingService.nextScreen!));
-        }
-        Navigator.of(context).pop();
+        // if (_onboardingService.nextScreen == null) {
+        //   Navigator.pop(context);
+        //   _onboardingService.onboardFunc(_onboardingService.atClientServiceMap,
+        //       _onboardingService.currentAtsign);
+        // } else {
+        //   _onboardingService.onboardFunc(_onboardingService.atClientServiceMap,
+        //       _onboardingService.currentAtsign);
+        //   await Navigator.pushReplacement(
+        //       context,
+        //       MaterialPageRoute<Widget>(
+        //           builder: (BuildContext context) =>
+        //               _onboardingService.nextScreen!));
+        // }
+        Navigator.of(context).pop(AtOnboardingResult.success);
+      } else {
+        //Todo: handle on error
       }
     } catch (e) {
       setState(() {
@@ -399,102 +400,159 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);
-    // if (widget.isQR) {
-    //   otp = true;
-    //   pair = true;
-    //   isfreeAtsign = true;
-    // }
-    double _dialogWidth = double.maxFinite;
-    if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
-      _dialogWidth = 400;
-    }
 
     return AbsorbPointer(
       absorbing: loading,
-      child: AlertDialog(
-        title: Text(
-          'Setting up your account',
-          style: TextStyle(
-            color: Theme.of(context).primaryColor,
-            fontSize: AtOnboardingDimens.fontLarge,
-          ),
-        ),
-        content: SizedBox(
-          width: _dialogWidth,
-          child: ListView(
-            shrinkWrap: true,
-            children: <Widget>[
-              SizedBox(height: 5.toHeight),
-              AtOnboardingPrimaryButton(
-                onPressed:
-                    (Platform.isMacOS || Platform.isLinux || Platform.isWindows)
-                        ? _uploadKeyFileForDesktop
-                        : _uploadKeyFile,
-                child: Text(
-                  'Upload backup key file',
-                  style: TextStyle(fontSize: 16.toFont),
-                ),
-                isLoading: loading,
-              ),
-              const Text(
-                'Upload your backup key file from stored location which was generated during the pairing process of your @sign.',
-                style: TextStyle(fontSize: AtOnboardingDimens.fontSmall),
-              ),
-              SizedBox(height: 20.toHeight),
-              const Text(
-                'Need an @sign?',
-                style: TextStyle(fontSize: AtOnboardingDimens.fontNormal),
-              ),
-              SizedBox(height: 5.toHeight),
-              AtOnboardingPrimaryButton(
-                onPressed: () async {
-                  _showGenerateScreen(context: context);
-                },
-                child: const Text(
-                  'Generate Free @sign',
-                  style: TextStyle(fontSize: AtOnboardingDimens.fontLarge),
-                ),
-              ),
-              SizedBox(height: 20.toHeight),
-              if (!widget.hideQrScan)
-                const Text(
-                  'Have a QR Code?',
-                  style: TextStyle(fontSize: AtOnboardingDimens.fontNormal),
-                ),
-              if (!widget.hideQrScan) SizedBox(height: 5.toHeight),
-              if (!widget.hideQrScan)
-                (Platform.isAndroid || Platform.isIOS)
-                    ? AtOnboardingPrimaryButton(
-                        onPressed: () async {
-                          _showQRCodeScreen(context: context);
-                        },
-                        child: const Text(
-                          'Scan QR code',
-                          style:
-                              TextStyle(fontSize: AtOnboardingDimens.fontLarge),
-                        ),
-                      )
-                    : AtOnboardingPrimaryButton(
-                        onPressed: () async {},
-                        child: Text(
-                          'Upload QR code',
-                          style: TextStyle(
-                              color: Colors.white, fontSize: 15.toFont),
-                        ),
-                      ),
-            ],
-          ),
-        ),
-        actions: <Widget>[
-          AtOnboardingSecondaryButton(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Setting up your account'),
+          leading: IconButton(
+            icon: const Icon(Icons.close_rounded),
             onPressed: () {
               Navigator.pop(context);
             },
-            child: const Text(
-              Strings.closeTitle,
+          ),
+          centerTitle: true,
+        ),
+        body: Center(
+          child: Container(
+            // width: _dialogWidth,
+            decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                borderRadius:
+                    BorderRadius.circular(AtOnboardingDimens.borderRadius)),
+            padding: const EdgeInsets.all(AtOnboardingDimens.paddingNormal),
+            margin: const EdgeInsets.all(AtOnboardingDimens.paddingNormal),
+            constraints: const BoxConstraints(
+              maxWidth: 400,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                const Text(
+                  'Have a backup key file?',
+                  style: TextStyle(
+                    fontSize: AtOnboardingDimens.fontLarge,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 5.toHeight),
+                AtOnboardingPrimaryButton(
+                  height: 48,
+                  borderRadius: 24,
+                  onPressed: (Platform.isMacOS ||
+                          Platform.isLinux ||
+                          Platform.isWindows)
+                      ? _uploadKeyFileForDesktop
+                      : _uploadKeyFile,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Text(
+                        'Upload backup key file',
+                        style:
+                            TextStyle(fontSize: AtOnboardingDimens.fontLarge),
+                      ),
+                      SizedBox(width: 10),
+                      Icon(
+                        Icons.cloud_upload_rounded,
+                        // size: 20,
+                      )
+                    ],
+                  ),
+                  isLoading: loading,
+                ),
+                SizedBox(height: 5.toHeight),
+                const Text(
+                  'Upload your backup key file from stored location which was generated during the pairing process of your @sign.',
+                  style: TextStyle(fontSize: AtOnboardingDimens.fontSmall),
+                ),
+                SizedBox(height: 20.toHeight),
+                const Text(
+                  'Need an @sign?',
+                  style: TextStyle(
+                    fontSize: AtOnboardingDimens.fontLarge,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 5.toHeight),
+                AtOnboardingSecondaryButton(
+                    height: 48,
+                    borderRadius: 24,
+                    onPressed: () async {
+                      _showGenerateScreen(context: context);
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Text(
+                          'Generate Free @sign',
+                          style:
+                              TextStyle(fontSize: AtOnboardingDimens.fontLarge),
+                        ),
+                        Icon(Icons.arrow_right_alt_rounded)
+                      ],
+                    )),
+                SizedBox(height: 20.toHeight),
+                if (!widget.hideQrScan)
+                  const Text(
+                    'Have a QR Code?',
+                    style: TextStyle(
+                      fontSize: AtOnboardingDimens.fontLarge,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                if (!widget.hideQrScan) SizedBox(height: 5.toHeight),
+                if (!widget.hideQrScan)
+                  (Platform.isAndroid || Platform.isIOS)
+                      ? AtOnboardingSecondaryButton(
+                          height: 48,
+                          borderRadius: 24,
+                          onPressed: () async {
+                            _showQRCodeScreen(context: context);
+                          },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Text(
+                                'Scan QR code',
+                                style: TextStyle(
+                                    fontSize: AtOnboardingDimens.fontLarge),
+                              ),
+                              Icon(Icons.arrow_right_alt_rounded)
+                            ],
+                          ),
+                        )
+                      : AtOnboardingSecondaryButton(
+                          onPressed: () async {},
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Upload QR code',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 15.toFont),
+                              ),
+                              const Icon(Icons.arrow_right_alt_rounded)
+                            ],
+                          ),
+                        ),
+              ],
             ),
           ),
-        ],
+        ),
+        // actions: <Widget>[
+        //   AtOnboardingSecondaryButton(
+        //     onPressed: () {
+        //       Navigator.pop(context);
+        //     },
+        //     child: const Text(
+        //       Strings.closeTitle,
+        //     ),
+        //   ),
+        // ],
       ),
     );
   }
@@ -502,29 +560,49 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
   void _showGenerateScreen({
     required BuildContext context,
   }) async {
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AtOnboardingGenerateScreen(
-        onGenerateSuccess: ({required String atSign, required String secret}) {
-          _processSharedSecret(atSign, secret);
-        },
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AtOnboardingGenerateScreen(
+          onGenerateSuccess: (
+              {required String atSign, required String secret}) {
+            _processSharedSecret(atSign, secret);
+          },
+        ),
       ),
     );
+    // await showDialog(
+    //   context: context,
+    //   barrierDismissible: false,
+    //   builder: (_) => AtOnboardingGenerateScreen(
+    //     onGenerateSuccess: ({required String atSign, required String secret}) {
+    //       _processSharedSecret(atSign, secret);
+    //     },
+    //   ),
+    // );
   }
 
   void _showQRCodeScreen({
     required BuildContext context,
   }) async {
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AtOnboardingQRCodeScreen(
-        onScanSuccess: ({required String atSign, required String secret}) {
-          _processSharedSecret(atSign, secret);
-        },
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const AtOnboardingQRCodeScreen(),
       ),
     );
+    if (result is AtOnboardingQRCodeResult) {
+      _processSharedSecret(result.atSign, result.secret);
+    }
+    // await showDialog(
+    //   context: context,
+    //   barrierDismissible: false,
+    //   builder: (_) => AtOnboardingQRCodeScreen(
+    //     onScanSuccess: ({required String atSign, required String secret}) {
+    //       _processSharedSecret(atSign, secret);
+    //     },
+    //   ),
+    // );
   }
 
   Future<dynamic> _processSharedSecret(String atsign, String secret,
@@ -549,18 +627,18 @@ class _AtOnboardingScreenState extends State<AtOnboardingScreen> {
             widget.onboardStatus == OnboardingStatus.RESTORE) {
           _onboardingService.onboardFunc(_onboardingService.atClientServiceMap,
               _onboardingService.currentAtsign);
-          if (_onboardingService.nextScreen == null) {
-            if (isScanner) Navigator.pop(context);
-            Navigator.pop(context);
-            widget.onBoardingSuccess?.call();
-            return;
-          }
-          if (isScanner) Navigator.pop(context);
-          await Navigator.pushReplacement(
-              context,
-              MaterialPageRoute<OnboardingService>(
-                  builder: (BuildContext context) =>
-                      _onboardingService.nextScreen!));
+          Navigator.pop(context, AtOnboardingResult.success);
+          // if (_onboardingService.nextScreen == null) {
+          //   if (isScanner) Navigator.pop(context);
+          //   Navigator.pop(context, AtOnboardingResult.success);
+          //   return;
+          // }
+          // if (isScanner) Navigator.pop(context);
+          // await Navigator.pushReplacement(
+          //     context,
+          //     MaterialPageRoute<OnboardingService>(
+          //         builder: (BuildContext context) =>
+          //             _onboardingService.nextScreen!));
         } else {
           await Navigator.pushReplacement(
             context,

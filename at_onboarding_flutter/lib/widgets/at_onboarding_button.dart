@@ -6,6 +6,7 @@ abstract class AtOnboardingButton extends StatelessWidget {
   final Color? borderColor;
   final double? height;
   final double? width;
+  final double? borderRadius;
   final bool isLoading;
   final VoidCallback? onPressed;
   final Widget child;
@@ -16,6 +17,7 @@ abstract class AtOnboardingButton extends StatelessWidget {
     required this.borderColor,
     required this.height,
     required this.width,
+    required this.borderRadius,
     required this.isLoading,
     required this.onPressed,
     required this.child,
@@ -29,6 +31,7 @@ class AtOnboardingPrimaryButton extends AtOnboardingButton {
     Color? borderColor,
     double? height,
     double? width,
+    double? borderRadius,
     bool isLoading = false,
     VoidCallback? onPressed,
     required Widget child,
@@ -38,6 +41,7 @@ class AtOnboardingPrimaryButton extends AtOnboardingButton {
           borderColor: borderColor,
           height: height,
           width: width,
+          borderRadius: borderRadius,
           isLoading: isLoading,
           onPressed: onPressed,
           child: child,
@@ -60,7 +64,7 @@ class AtOnboardingPrimaryButton extends AtOnboardingButton {
             foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
             shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                 RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(borderRadius ?? 4),
                     side: BorderSide(
                         color: borderColor ?? themeData.primaryColor)))),
       ),
@@ -75,6 +79,7 @@ class AtOnboardingSecondaryButton extends AtOnboardingButton {
     Color? borderColor,
     double? height,
     double? width,
+    double? borderRadius,
     bool isLoading = false,
     VoidCallback? onPressed,
     required Widget child,
@@ -84,6 +89,7 @@ class AtOnboardingSecondaryButton extends AtOnboardingButton {
           borderColor: borderColor,
           height: height,
           width: width,
+          borderRadius: borderRadius,
           isLoading: isLoading,
           onPressed: onPressed,
           child: child,
@@ -109,7 +115,7 @@ class AtOnboardingSecondaryButton extends AtOnboardingButton {
                 MaterialStateProperty.all<Color>(themeData.primaryColor),
             shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                 RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(borderRadius ?? 4),
                     side: BorderSide(
                         color: borderColor ?? themeData.primaryColor)))),
       ),

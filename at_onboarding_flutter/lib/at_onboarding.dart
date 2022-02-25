@@ -9,12 +9,17 @@ import 'at_onboarding_start_screen.dart';
 import 'screens/onboarding_widget.dart';
 import 'utils/app_constants.dart';
 
+enum AtOnboardingResult {
+  success, //Authenticate success
+  error, //Authenticate error
+  notFound, //Done have
+  cancel, //User canceled
+}
+
 class AtOnboarding {
-  static onboard({
+  static Future<AtOnboardingResult> onboard({
     required BuildContext context,
     required AtOnboardingConfig config,
-    VoidCallback? onSuccess,
-    VoidCallback? onError,
   }) async {
     ColorConstants.darkTheme = Theme.of(context).brightness == Brightness.dark;
     AppConstants.setApiKey(
@@ -30,19 +35,21 @@ class AtOnboarding {
     if (result is AtOnboardingResult) {
       switch (result) {
         case AtOnboardingResult.success:
-          onSuccess?.call();
-          break;
+          return AtOnboardingResult.success;
         case AtOnboardingResult.error:
-          onError?.call();
-          break;
+          return AtOnboardingResult.error;
         case AtOnboardingResult.notFound:
-          start(context: context, config: config);
+          return start(
+            context: context,
+            config: config,
+          );
           break;
       }
     }
+    return AtOnboardingResult.cancel;
   }
 
-  static start({
+  static Future<AtOnboardingResult> start({
     required BuildContext context,
     required AtOnboardingConfig config,
     VoidCallback? onSuccess,
@@ -54,11 +61,26 @@ class AtOnboarding {
     AppConstants.rootDomain =
         config.domain ?? AppConstants.rootEnvironment.domain;
     SizeConfig().init(context);
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AtOnboardingScreen(config: config),
-    );
+    // await showDialog(
+    //   context: context,
+    //   barrierDismissible: false,
+    //   builder: (_) => AtOnboardingScreen(config: config),
+    // );
+
+    final result = await Navigator.push(context,
+        MaterialPageRoute(builder: (BuildContext context) {
+      return AtOnboardingScreen(config: config);
+    }));
+
+    if (result is AtOnboardingResult) {
+      switch (result) {
+        case AtOnboardingResult.success:
+          return AtOnboardingResult.success;
+        case AtOnboardingResult.error:
+          return AtOnboardingResult.error;
+      }
+    }
+    return AtOnboardingResult.cancel;
   }
 
   static reset({
