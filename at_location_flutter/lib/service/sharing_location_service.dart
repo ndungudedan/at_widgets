@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_typing_uninitialized_variables
 
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:at_commons/at_commons.dart';
 import 'package:at_contact/at_contact.dart';
@@ -77,7 +78,7 @@ class SharingLocationService {
 
   /// Sends a 'sharelocation' key to [atsign] with duration of [minutes] minute
   Future<bool?> sendShareLocationEvent(String? atsign, bool isAcknowledgment,
-      {int? minutes}) async {
+      {int? minutes, Uint8List? imageData}) async {
     try {
       var alreadyExists = checkForAlreadyExisting(atsign);
       var result;
@@ -116,22 +117,33 @@ class SharingLocationService {
       }
 
       AtKey atKey;
+      AtKey? imageKey;
       if (minutes != null) {
         atKey = newAtKey((minutes * 60000),
             'sharelocation-${DateTime.now().microsecondsSinceEpoch}', atsign,
             ttl: (minutes * 60000),
             expiresAt: DateTime.now().add(Duration(minutes: minutes)));
+        if (imageData != null) {
+          imageKey = newAtKey((minutes * 60000),
+              'imagekey-${DateTime.now().microsecondsSinceEpoch}', atsign,
+              ttl: (minutes * 60000),
+              imageDataPresent: imageData != null,
+              expiresAt: DateTime.now().add(Duration(minutes: minutes)));
+        }
       } else {
-        atKey = newAtKey(
-          60000,
-          'sharelocation-${DateTime.now().microsecondsSinceEpoch}',
-          atsign,
-        );
+        atKey = newAtKey(60000,
+            'sharelocation-${DateTime.now().microsecondsSinceEpoch}', atsign);
+        if (imageData != null) {
+          imageKey = newAtKey(60000,
+            'imagekey-${DateTime.now().microsecondsSinceEpoch}', atsign,
+            imageDataPresent: imageData != null);
+        }
       }
 
       var locationNotificationModel = LocationNotificationModel()
         ..atsignCreator = AtLocationNotificationListener().currentAtSign
         ..key = atKey.key
+        ..imageKey= imageKey?.key
         ..lat = 12
         ..long = 12
         ..receiver = atsign
@@ -139,17 +151,23 @@ class SharingLocationService {
         ..isAccepted = true
         ..isExited = false
         ..isSharing = true
-        ..isAcknowledgment = isAcknowledgment;
+        ..isAcknowledgment = isAcknowledgment
+        ..hasImageData = imageData != null;
+
 
       if ((minutes != null)) {
         locationNotificationModel.to =
             DateTime.now().add(Duration(minutes: minutes));
       }
-      result = await NotifyAndPut().notifyAndPut(
-        atKey,
-        LocationNotificationModel.convertLocationNotificationToJson(
-            locationNotificationModel),
-      );
+       
+        result = await NotifyAndPut().notifyAndPut(
+          atKey,
+          LocationNotificationModel.convertLocationNotificationToJson(
+              locationNotificationModel),
+              imageKey: imageKey,
+              imageData: imageData
+        );
+      
       _logger.finer('sendLocationNotification:$result');
 
       if (result) {
@@ -360,7 +378,7 @@ class SharingLocationService {
 
   /// returns a new [AtKey].
   AtKey newAtKey(int ttr, String key, String? sharedWith,
-      {int? ttl, DateTime? expiresAt}) {
+      {int? ttl, DateTime? expiresAt, bool imageDataPresent = false}) {
     var atKey = AtKey()
       ..metadata = Metadata()
       ..metadata!.ttr = ttr
@@ -370,6 +388,11 @@ class SharingLocationService {
       ..sharedBy = AtLocationNotificationListener().currentAtSign;
     if (ttl != null) atKey.metadata!.ttl = ttl;
     if (expiresAt != null) atKey.metadata!.expiresAt = expiresAt;
+    if (imageDataPresent) {
+      atKey.metadata!.isEncrypted = false;
+      atKey.metadata!.isPublic = true;
+      atKey.metadata!.isBinary = true;
+    }
     return atKey;
   }
 }

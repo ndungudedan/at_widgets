@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:at_client_mobile/at_client_mobile.dart';
 import 'package:at_commons/at_commons.dart';
 import 'package:at_location_flutter/location_modal/key_location_model.dart';
@@ -80,6 +82,15 @@ Future<bool?> sendShareLocationNotification(String atsign, int? minutes) async {
 /// before calling this [atsign] should be checked if valid or not.
 Future<bool?> sendRequestLocationNotification(String atsign) async {
   var result = await RequestLocationService().sendRequestLocationEvent(atsign);
+  return result;
+}
+
+/// sends a share location notification to the [atsign], with a 'ttl' of [minutes] and a photo [imageData].
+/// before calling this [atsign] should be checked if valid or not.
+Future<bool?> sendSharePhotoLocationNotification(
+    String atsign, int? minutes, Uint8List imageData) async {
+  var result = await SharingLocationService()
+      .sendShareLocationEvent(atsign, false, minutes: minutes,imageData: imageData);
   return result;
 }
 

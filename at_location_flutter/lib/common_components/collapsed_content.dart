@@ -86,7 +86,7 @@ class _CollapsedContentState extends State<CollapsedContent> {
     }
 
     return Container(
-        height: widget.expanded ? 431.toHeight : 205.toHeight,
+        height: widget.expanded ? 500.toHeight : 250.toHeight,
         padding: const EdgeInsets.fromLTRB(15, 3, 15, 0),
         decoration: BoxDecoration(
           borderRadius: const BorderRadius.only(
@@ -150,7 +150,19 @@ class _CollapsedContentState extends State<CollapsedContent> {
                                 AllText().SHARING_MY_LOC + ' $time',
                                 style: CustomTextStyles().black12,
                               )
-                            : const SizedBox()
+                            : const SizedBox(),
+                       widget.userListenerKeyword!.imageData!=null ?     Container(
+                         margin: EdgeInsets.all(8),
+                         height: MediaQuery.of(context).size.height/10,
+                         width: MediaQuery.of(context).size.width/5,
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                                image: DecorationImage(image: MemoryImage(widget.userListenerKeyword!.imageData!,),
+                                fit: BoxFit.fill)
+                                
+                              ),
+                            ): SizedBox.shrink()
                       ],
                     ),
                   ),

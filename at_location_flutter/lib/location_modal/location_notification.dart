@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:at_contact/at_contact.dart';
 // ignore: import_of_legacy_library_into_null_safe
 import 'package:latlong2/latlong.dart';
@@ -6,7 +7,7 @@ import 'package:latlong2/latlong.dart';
 /// Model containing all the information needed for location sharing.
 class LocationNotificationModel {
   /// [atsignCreator] who shares their location, [receiver] who receives the location.
-  String? atsignCreator, receiver, key;
+  String? atsignCreator, receiver, key,imageKey;
 
   /// [lat],[long] co-ordinates being shared.
   double? lat, long;
@@ -23,7 +24,11 @@ class LocationNotificationModel {
       isAcknowledgment,
       isRequest,
       updateMap,
+      hasImageData,
       rePrompt;
+
+  ///[imageData] if the notification contains a photo    
+  Uint8List? imageData;
 
   /// start sharing location [from],
   /// stop sharing location [to].
@@ -44,6 +49,9 @@ class LocationNotificationModel {
     this.isSharing = true,
     this.updateMap = false,
     this.rePrompt = false,
+    this.imageData,
+    this.imageKey,
+    this.hasImageData=false,
   });
 
   // ignore: always_declare_return_types
@@ -67,6 +75,10 @@ class LocationNotificationModel {
         isExited = json['isExited'] == 'true' ? true : false,
         isRequest = json['isRequest'] == 'true' ? true : false,
         isSharing = json['isSharing'] == 'true' ? true : false,
+                imageKey = json['imageKey'],
+
+        hasImageData = json['hasImageData'] == 'true' ? true : false,
+
         from = ((json['from'] != 'null') && (json['from'] != null))
             ? DateTime.parse(json['from']).toLocal()
             : null,
@@ -103,7 +115,14 @@ class LocationNotificationModel {
       'isExited': locationNotificationModel.isExited.toString(),
       'updateMap': locationNotificationModel.updateMap.toString(),
       'rePrompt': locationNotificationModel.rePrompt.toString(),
-      'isSharing': locationNotificationModel.isSharing.toString()
+      'isSharing': locationNotificationModel.isSharing.toString(),
+            
+      'imageData':null.toString(),
+
+      'imageKey': locationNotificationModel.imageKey!=null ? locationNotificationModel.imageKey.toString() : null.toString(),
+
+      'hasImageData': locationNotificationModel.hasImageData.toString()
+
     });
     return notification;
   }
